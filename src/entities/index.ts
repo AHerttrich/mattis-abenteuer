@@ -1,0 +1,1 @@
+export { WarriorManager } from './WarriorManager';

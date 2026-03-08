@@ -1,0 +1,202 @@
+/**
+ * CastleBuildUI — Lets the player place castle buildings in the world.
+ * Toggle with B key. Shows a ghost preview, deducts items on placement.
+ */
+
+import * as THREE from 'three';
+import { BuildingType, Castle } from '../castle/Castle';
+import type { Inventory } from '../crafting/Inventory';
+import type { ChunkManager } from '../world/ChunkManager';
+import type { HUD } from '../ui/HUD';
+import { BlockType } from '../world/BlockType';
+
+export interface BuildingOption {
+  type: BuildingType;
+  label: string;
+  icon: string;
+  cost: { itemId: string; count: number }[];
+}
+
+export const BUILDING_OPTIONS: BuildingOption[] = [
+  { type: BuildingType.WALL, label: 'Wall', icon: '🧱',
+    cost: [{ itemId: 'stone_brick', count: 20 }] },
+  { type: BuildingType.WATCHTOWER, label: 'Watchtower', icon: '🗼',
+    cost: [{ itemId: 'stone_brick', count: 40 }, { itemId: 'planks_oak', count: 10 }] },
+  { type: BuildingType.GATE, label: 'Gate', icon: '🚪',
+    cost: [{ itemId: 'planks_dark', count: 30 }, { itemId: 'iron_ingot', count: 5 }] },
+  { type: BuildingType.BARRACKS, label: 'Barracks', icon: '⚔️',
+    cost: [{ itemId: 'stone_brick', count: 30 }, { itemId: 'planks_oak', count: 20 }] },
+  { type: BuildingType.ARCHERY_RANGE, label: 'Archery Range', icon: '🏹',
+    cost: [{ itemId: 'planks_oak', count: 40 }, { itemId: 'string', count: 10 }] },
+  { type: BuildingType.STABLE, label: 'Stable', icon: '🐴',
+    cost: [{ itemId: 'planks_oak', count: 50 }, { itemId: 'iron_ingot', count: 8 }] },
+  { type: BuildingType.SIEGE_WORKSHOP, label: 'Siege Workshop', icon: '💣',
+    cost: [{ itemId: 'iron_ingot', count: 20 }, { itemId: 'planks_dark', count: 30 }] },
+];
+
+export class CastleBuildUI {
+  private overlay: HTMLDivElement;
+  private castle: Castle;
+  private inventory: Inventory;
+  private chunkManager: ChunkManager;
+  private hud: HUD;
+  private scene: THREE.Scene;
+  private visible = false;
+  private selectedBuilding: BuildingOption | null = null;
+  private ghostMesh: THREE.Mesh | null = null;
+  private placementPos: { x: number; y: number; z: number } | null = null;
+
+  constructor(castle: Castle, inventory: Inventory, chunkManager: ChunkManager, hud: HUD, scene: THREE.Scene) {
+    this.castle = castle;
+    this.inventory = inventory;
+    this.chunkManager = chunkManager;
+    this.hud = hud;
+    this.scene = scene;
+
+    this.overlay = document.createElement('div');
+    this.overlay.id = 'castle-build-ui';
+    this.overlay.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:150;pointer-events:auto;';
+
+    this.createButtons();
+    document.body.appendChild(this.overlay);
+  }
+
+  private createButtons(): void {
+    for (const opt of BUILDING_OPTIONS) {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'background:rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:12px;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px;';
+
+      const canAfford = this.checkCost(opt.cost);
+      if (!canAfford) btn.style.opacity = '0.4';
+
+      btn.innerHTML = `<span style="font-size:20px;">${opt.icon}</span><span>${opt.label}</span>`;
+      btn.addEventListener('click', () => this.selectBuilding(opt));
+      btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#f1c40f'; });
+      btn.addEventListener('mouseleave', () => { btn.style.borderColor = this.selectedBuilding === opt ? '#2ecc71' : 'rgba(255,255,255,0.3)'; });
+      btn.dataset.buildingType = opt.type;
+      this.overlay.appendChild(btn);
+    }
+  }
+
+  private selectBuilding(opt: BuildingOption): void {
+    if (!this.checkCost(opt.cost)) {
+      this.hud.showInfo('❌ Not enough materials!', 2000);
+      return;
+    }
+    this.selectedBuilding = opt;
+    this.hud.showInfo(`🏗️ Placing ${opt.label} — Click to place, ESC to cancel`);
+
+    // Update button styling
+    this.overlay.querySelectorAll('button').forEach((btn) => {
+      (btn as HTMLElement).style.borderColor = btn.dataset.buildingType === opt.type ? '#2ecc71' : 'rgba(255,255,255,0.3)';
+    });
+
+    // Create ghost preview mesh
+    this.removeGhost();
+    const size = opt.type === BuildingType.WATCHTOWER ? 3 : 5;
+    const geo = new THREE.BoxGeometry(size, 4, size);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.3, wireframe: true });
+    this.ghostMesh = new THREE.Mesh(geo, mat);
+    this.scene.add(this.ghostMesh);
+  }
+
+  /** Update ghost position to where player is looking. */
+  updateGhost(playerX: number, playerY: number, playerZ: number, yaw: number): void {
+    if (!this.ghostMesh || !this.selectedBuilding) return;
+
+    // Place 8 blocks ahead of the player
+    const dist = 8;
+    const gx = Math.floor(playerX + Math.sin(yaw) * dist);
+    const gz = Math.floor(playerZ + Math.cos(yaw) * dist);
+    const gy = playerY;
+
+    this.ghostMesh.position.set(gx + 0.5, gy + 2, gz + 0.5);
+    this.placementPos = { x: gx, y: Math.floor(gy), z: gz };
+  }
+
+  /** Place the selected building. */
+  placeBuilding(): boolean {
+    if (!this.selectedBuilding || !this.placementPos) return false;
+    if (!this.checkCost(this.selectedBuilding.cost)) {
+      this.hud.showInfo('❌ Not enough materials!', 2000);
+      return false;
+    }
+
+    // Deduct materials
+    for (const req of this.selectedBuilding.cost) {
+      this.inventory.removeItem(req.itemId, req.count);
+    }
+
+    const { x, y, z } = this.placementPos;
+    this.castle.addBuilding(this.selectedBuilding.type, x, y + 1, z);
+
+    // Place some blocks for the building
+    const size = 2;
+    for (let dx = -size; dx <= size; dx++) {
+      for (let dz = -size; dz <= size; dz++) {
+        for (let dy = 0; dy < 4; dy++) {
+          const isWall = Math.abs(dx) === size || Math.abs(dz) === size;
+          this.chunkManager.setBlockAtWorld(
+            x + dx, y + 1 + dy, z + dz,
+            isWall ? BlockType.CASTLE_WALL : (dy === 0 ? BlockType.CASTLE_FLOOR : BlockType.AIR),
+          );
+        }
+        this.chunkManager.setBlockAtWorld(x + dx, y + 5, z + dz, BlockType.CASTLE_WALL);
+      }
+    }
+    // Door
+    this.chunkManager.setBlockAtWorld(x + size, y + 2, z, BlockType.AIR);
+    this.chunkManager.setBlockAtWorld(x + size, y + 3, z, BlockType.AIR);
+    this.chunkManager.setBlockAtWorld(x, y + 4, z, BlockType.TORCH);
+
+    this.hud.showInfo(`🏗️ ${this.selectedBuilding.label} built!`);
+    this.removeGhost();
+    this.selectedBuilding = null;
+    this.refreshButtons();
+    return true;
+  }
+
+  private checkCost(cost: { itemId: string; count: number }[]): boolean {
+    return cost.every((req) => this.inventory.countItem(req.itemId) >= req.count);
+  }
+
+  private removeGhost(): void {
+    if (this.ghostMesh) {
+      this.scene.remove(this.ghostMesh);
+      this.ghostMesh.geometry.dispose();
+      (this.ghostMesh.material as THREE.Material).dispose();
+      this.ghostMesh = null;
+    }
+  }
+
+  private refreshButtons(): void {
+    const buttons = this.overlay.querySelectorAll('button');
+    buttons.forEach((btn, i) => {
+      const opt = BUILDING_OPTIONS[i];
+      (btn as HTMLElement).style.opacity = this.checkCost(opt.cost) ? '1' : '0.4';
+      (btn as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)';
+    });
+  }
+
+  toggle(): void {
+    this.visible = !this.visible;
+    this.overlay.style.display = this.visible ? 'flex' : 'none';
+    if (!this.visible) {
+      this.removeGhost();
+      this.selectedBuilding = null;
+    } else {
+      this.refreshButtons();
+    }
+  }
+
+  cancel(): void {
+    this.removeGhost();
+    this.selectedBuilding = null;
+    this.visible = false;
+    this.overlay.style.display = 'none';
+  }
+
+  get isVisible(): boolean { return this.visible; }
+  get isPlacing(): boolean { return this.selectedBuilding !== null; }
+  destroy(): void { this.removeGhost(); this.overlay.remove(); }
+}
