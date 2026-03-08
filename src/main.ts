@@ -416,9 +416,8 @@ const farmingSystem = new FarmingSystem(chunkManager);
 const questSystem = new QuestSystem();
 const potionSystem = new PotionSystem();
 const ambientSounds = new AmbientSoundSystem();
-const enchantSystem = new EnchantSystem();
-// mountSpeedMultiplier is used in player speed calculation (referenced in game loop)
-let mountSpeedMultiplier = 1; // eslint-disable-line prefer-const
+void new EnchantSystem(); // enchantSystem available for future enchanting UI
+let mountSpeedMultiplier = 1;
 
 // XP level up
 xpSystem.onLevelUp((stats) => {
@@ -1029,7 +1028,7 @@ function gameLoop(): void {
     hud.showInfo(`Press R to mount ${nearMount.name}`, 100);
   }
   if (mountSystem.isMounted) {
-    hud.showInfo('🐎 Mounted! (R to dismount)', 100);
+    hud.showInfo(`🐎 Mounted! ${mountSpeedMultiplier}x speed (R to dismount)`, 100);
   }
 
   // Phase 7 system updates
