@@ -60,6 +60,9 @@ import { ScoreDashboard } from './ui/ScoreDashboard';
 import { InventoryUI } from './ui/InventoryUI';
 import { WaveManager, WaveEvents } from './engine/WaveManager';
 import { CaveMobSystem } from './entities/CaveMobSystem';
+import { VillagerSystem } from './entities/VillagerSystem';
+import { TradingUI } from './ui/TradingUI';
+import { WarriorType } from './ecs/Component';
 import { ParticleSystem } from './effects/ParticleSystem';
 import { SkySystem } from './effects/SkySystem';
 import { TorchLightManager } from './effects/TorchLight';
@@ -378,12 +381,44 @@ eventBus.on('player:fall_damage', (data: any) => {
   if (playerHealth <= 0) eventBus.emit(Events.PLAYER_DIED, {});
 });
 
+// ── Villager System + Trading ──────────────────────────────
+const villagerSystem = new VillagerSystem(scene);
+const tradingUI = new TradingUI(inventory);
+villagerSystem.setInteractionCallback((villager) => {
+  tradingUI.open(villager);
+  soundManager.playCraft(); // pleasant interaction ding
+});
+tradingUI.onRecruit((type) => {
+  const typeMap: Record<string, WarriorType> = {
+    swordsman: WarriorType.SWORDSMAN,
+    archer: WarriorType.ARCHER,
+    shield: WarriorType.SHIELD_BEARER,
+  };
+  const wt = typeMap[type] ?? WarriorType.SWORDSMAN;
+  warriorManager.spawnWarrior(wt, 'player', player.x + 2, player.y, player.z + 2, playerCastle.id, enemyCastle.id);
+  hud.showInfo(`⚔️ ${type} warrior recruited!`, 2000);
+});
+
+// ── Structure Placement (villages spawn villagers) ─────────
+const structureGen = new StructureGenerator(WORLD_SEED);
+
 // Place player castle blocks (near spawn, so chunk should load quickly)
 let playerCastlePlaced = false;
 eventBus.on(Events.CHUNK_LOADED, () => {
   if (!playerCastlePlaced) {
     const cx = Math.floor((spawnX + 10) / 16), cz = Math.floor((spawnZ + 10) / 16);
     if (chunkManager.getChunk(cx, cz)) { enemyGen.placeBlocks(chunkManager, playerCastle); playerCastlePlaced = true; }
+  }
+  // Discover and place structures near the player
+  const newStructures = structureGen.findStructures(Math.floor(player.x), Math.floor(player.z), 200);
+  for (const loc of newStructures) {
+    const groundY = 25; // Approximate terrain height for structures
+    structureGen.placeStructure(loc, chunkManager, groundY);
+    if (loc.type === 'village') {
+      villagerSystem.spawnVillagersAtStructure(loc);
+      hud.showInfo('🏘️ Village discovered!', 3000);
+    }
+    eventBus.emit(Events.STRUCTURE_DISCOVERED, { type: loc.type, x: loc.x, z: loc.z });
   }
 });
 
@@ -762,6 +797,13 @@ document.addEventListener('keydown', (e) => {
   if (key === 'f9') { e.preventDefault(); const d = saveSystem.load(); if (d) { const a = saveSystem.apply(d, player, inventory); playerHealth = a.health; dayNight.time = a.dayTime; hud.showInfo('💾 Loaded!', 2000); } }
   if (key === 'm') { soundManager.toggle(); hud.showInfo(soundManager.isEnabled ? '🔊 ON' : '🔇 OFF', 1500); }
   if (key === ' ' && player.isGrounded) soundManager.playJump();
+  if (key === 'e') {
+    // Trading interaction
+    if (tradingUI.isVisible) { tradingUI.hide(); }
+    else if (!craftingUI.isVisible && !pauseMenu.isVisible && !inventoryUI.isVisible) {
+      villagerSystem.tryInteract(player.x, player.y, player.z);
+    }
+  }
   if (key === 'tab') { e.preventDefault(); scoreDashboard.toggle(); }
 });
 
@@ -917,6 +959,13 @@ function gameLoop(): void {
   hud.updateDebug(fps, player.x, player.y, player.z, chunkManager.loadedChunkCount, biomeLabel[biome] ?? biome, dayNight.getTimeString(), warriorManager.warriorCount);
   hud.updateHunger(hunger.hunger, hunger.maxHunger);
   baseBuildView.update();
+
+  // Villager update + interaction prompt
+  villagerSystem.update(dt, player.x, player.y, player.z);
+  const nearVillager = villagerSystem.getNearestInRange(player.x, player.y, player.z);
+  if (nearVillager && !tradingUI.isVisible) {
+    hud.showInfo(`Press E to trade with ${nearVillager.name}`, 100);
+  }
 
   // Wave system
   waveManager.update(dt);

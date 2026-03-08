@@ -120,13 +120,48 @@ export class CraftingUI {
       card.appendChild(result);
 
       if (canCraft) {
+        // Craft 1 button
         card.addEventListener('click', () => {
           if (this.onCraft) this.onCraft(recipe);
           this.refresh();
         });
         card.addEventListener('mouseenter', () => { card.style.background = 'rgba(46,204,113,0.2)'; });
         card.addEventListener('mouseleave', () => { card.style.background = 'rgba(255,255,255,0.1)'; });
+
+        // Craft All button
+        const maxCraftable = this.getMaxCraftable(recipe);
+        if (maxCraftable > 1) {
+          const craftAllBtn = document.createElement('button');
+          craftAllBtn.style.cssText = 'margin-top:8px;background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-family:monospace;font-size:11px;pointer-events:auto;transition:background 0.15s;';
+          craftAllBtn.textContent = `Craft All (×${maxCraftable})`;
+          craftAllBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            for (let i = 0; i < maxCraftable; i++) {
+              if (this.onCraft) this.onCraft(recipe);
+            }
+            this.refresh();
+          });
+          craftAllBtn.addEventListener('mouseenter', () => { craftAllBtn.style.background = '#27ae60'; });
+          craftAllBtn.addEventListener('mouseleave', () => { craftAllBtn.style.background = '#2ecc71'; });
+          card.appendChild(craftAllBtn);
+        }
       }
+
+      // Result tooltip
+      const resultDef = getItemDef(recipe.result.itemId);
+      if (resultDef) {
+        const tipParts: string[] = [];
+        if (resultDef.damage) tipParts.push(`⚔️${resultDef.damage}`);
+        if (resultDef.armor) tipParts.push(`🛡️${resultDef.armor}`);
+        if (resultDef.durability) tipParts.push(`🔧${resultDef.durability}`);
+        if (tipParts.length > 0) {
+          const statLine = document.createElement('div');
+          statLine.style.cssText = 'font-size:10px;color:#8e44ad;margin-top:4px;';
+          statLine.textContent = tipParts.join('  ');
+          card.appendChild(statLine);
+        }
+      }
+
       this.recipeList.appendChild(card);
     }
 
@@ -155,4 +190,14 @@ export class CraftingUI {
   get isVisible(): boolean { return this.visible; }
   hide(): void { this.visible = false; this.overlay.style.display = 'none'; }
   destroy(): void { this.overlay.remove(); }
+
+  /** How many times can we craft this recipe with current inventory? */
+  private getMaxCraftable(recipe: CraftingRecipe): number {
+    let max = Infinity;
+    for (const ing of recipe.ingredients) {
+      const have = this.inventory.countItem(ing.itemId);
+      max = Math.min(max, Math.floor(have / ing.count));
+    }
+    return max === Infinity ? 0 : max;
+  }
 }

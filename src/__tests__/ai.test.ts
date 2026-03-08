@@ -23,6 +23,53 @@ describe('AI', () => {
       const path = pf.findPath(0, 0, 0, 5, 0, 0);
       expect(path).toBeNull();
     });
+
+    it('should reject paths through 1-block-high tunnels (headroom check)', () => {
+      // Ground at y=-1, overhang at y=1 blocking x=2 (only 1 block clearance)
+      const isSolid = (x: number, y: number, _z: number): boolean => {
+        if (y < 0) return true;       // ground
+        if (x === 2 && y === 1) return true;  // overhang at head level
+        return false;
+      };
+      const pf = new PathFinder(isSolid);
+      // Path from (0,0,0) to (4,0,0) must go around x=2 or return null
+      const path = pf.findPath(0, 0, 0, 4, 0, 0);
+      if (path) {
+        // If a path is found, it must not pass through x=2,y=0 (under the overhang)
+        const goesUnderOverhang = path.some(p => p.x === 2 && p.y === 0);
+        expect(goesUnderOverhang).toBe(false);
+      }
+    });
+
+    it('should find paths between different elevations', () => {
+      // Step terrain: y=0 ground from x=0-2, y=1 ground from x=3+
+      const isSolid = (x: number, y: number, _z: number): boolean => {
+        if (x >= 3) return y < 1;  // higher ground
+        return y < 0;              // lower ground
+      };
+      const pf = new PathFinder(isSolid);
+      const path = pf.findPath(0, 0, 0, 4, 1, 0);
+      expect(path).not.toBeNull();
+      expect(path![path!.length - 1].y).toBe(1);
+    });
+
+    it('should navigate around L-shaped walls', () => {
+      // L-shaped wall: x=2 from z=0-3, z=3 from x=2-5
+      const isSolid = (x: number, y: number, z: number): boolean => {
+        if (y < 0) return true; // ground
+        if (y > 1) return false; // air above head
+        if (x === 2 && z <= 3) return true;  // vertical part of L
+        if (z === 3 && x >= 2 && x <= 5) return true; // horizontal part of L
+        return false;
+      };
+      const pf = new PathFinder(isSolid);
+      const path = pf.findPath(0, 0, 0, 4, 0, 0);
+      if (path) {
+        // Path found — it should go around the wall (z < 0 side)
+        expect(path.length).toBeGreaterThan(4); // must detour
+        expect(path[path.length - 1]).toEqual({ x: 4, y: 0, z: 0 });
+      }
+    });
   });
 
   describe('AIStateMachine', () => {

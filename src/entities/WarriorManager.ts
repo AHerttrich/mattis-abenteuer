@@ -72,6 +72,7 @@ export class WarriorManager {
   private chunkManager: ChunkManager;
   private pathFinder: PathFinder;
   private paths = new Map<string, { waypoints: { x: number; y: number; z: number }[]; index: number; repathTimer: number }>();
+  private lastPositions = new Map<string, { x: number; z: number; stuckTimer: number }>();
 
   constructor(ecsWorld: ECSWorld, scene: THREE.Scene, combat: CombatSystem, chunkManager: ChunkManager) {
     this.ecsWorld = ecsWorld;
@@ -430,29 +431,68 @@ export class WarriorManager {
     }
   }
 
+  /** Find terrain height at a given XZ by scanning downward. */
+  private getTerrainY(x: number, z: number): number {
+    const bx = Math.floor(x), bz = Math.floor(z);
+    // Scan down from a generous height
+    for (let y = 60; y > 0; y--) {
+      if (this.isSolidAt(bx, y, bz) && !this.isSolidAt(bx, y + 1, bz)) {
+        return y + 1;
+      }
+    }
+    return 0;
+  }
+
   private moveToward(pos: PositionComponent, entityId: string, tx: number, tz: number, speed: number, dt: number): void {
-    // Get or compute path
+    // ── Stuck detection ─────────────────────────────────────────
+    let lastPos = this.lastPositions.get(entityId);
+    if (!lastPos) {
+      lastPos = { x: pos.x, z: pos.z, stuckTimer: 0 };
+      this.lastPositions.set(entityId, lastPos);
+    }
+    const movedDist = Math.sqrt((pos.x - lastPos.x) ** 2 + (pos.z - lastPos.z) ** 2);
+    if (movedDist < 0.1) {
+      lastPos.stuckTimer += dt;
+    } else {
+      lastPos.stuckTimer = 0;
+      lastPos.x = pos.x;
+      lastPos.z = pos.z;
+    }
+    const isStuck = lastPos.stuckTimer > 0.5;
+
+    // ── Get or compute path ─────────────────────────────────────
     let pathData = this.paths.get(entityId);
-    if (!pathData || pathData.repathTimer <= 0) {
+    if (!pathData || pathData.repathTimer <= 0 || isStuck) {
+      // Use actual terrain height as goal Y instead of start Y
+      const goalY = this.getTerrainY(tx, tz);
       const path = this.pathFinder.findPath(
         Math.floor(pos.x), Math.floor(pos.y), Math.floor(pos.z),
-        Math.floor(tx), Math.floor(pos.y), Math.floor(tz)
+        Math.floor(tx), goalY, Math.floor(tz)
       );
       if (path && path.length > 1) {
-        pathData = { waypoints: path, index: 1, repathTimer: 2.0 };
+        pathData = { waypoints: path, index: 1, repathTimer: 3.0 };
         this.paths.set(entityId, pathData);
       } else {
-        // Fallback: simple direct move with gravity
+        // Fallback: simple direct move
         this.simpleMoveToward(pos, tx, tz, speed * dt);
-        if (pathData) pathData.repathTimer = 2.0;
+        if (pathData) pathData.repathTimer = 1.5;
+        if (isStuck) lastPos.stuckTimer = 0;
         return;
       }
+      if (isStuck) lastPos.stuckTimer = 0;
     }
     pathData.repathTimer -= dt;
 
-    // Follow waypoints
+    // ── Follow waypoints ────────────────────────────────────────
     if (pathData.index < pathData.waypoints.length) {
       const wp = pathData.waypoints[pathData.index];
+
+      // Waypoint collision guard: if the waypoint is now inside a solid block, invalidate path
+      if (this.isSolidAt(wp.x, wp.y, wp.z) || this.isSolidAt(wp.x, wp.y + 1, wp.z)) {
+        pathData.repathTimer = 0; // force repath next frame
+        return;
+      }
+
       const dx = (wp.x + 0.5) - pos.x;
       const dz = (wp.z + 0.5) - pos.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
@@ -463,8 +503,20 @@ export class WarriorManager {
         pathData.index++;
       } else {
         const step = Math.min(speed * dt, dist);
-        pos.x += (dx / dist) * step;
-        pos.z += (dz / dist) * step;
+        const nextX = pos.x + (dx / dist) * step;
+        const nextZ = pos.z + (dz / dist) * step;
+
+        // Check movement won't go inside a solid block
+        const by = Math.floor(pos.y);
+        if (!this.isSolidAt(Math.floor(nextX), by, Math.floor(nextZ)) &&
+            !this.isSolidAt(Math.floor(nextX), by + 1, Math.floor(nextZ))) {
+          pos.x = nextX;
+          pos.z = nextZ;
+        } else {
+          // Movement blocked — force repath
+          pathData.repathTimer = 0;
+          return;
+        }
         // Smoothly adjust Y toward waypoint
         pos.y += (wp.y - pos.y) * 0.3;
       }
@@ -483,14 +535,17 @@ export class WarriorManager {
     const step = Math.min(maxDist, dist);
     const nx = pos.x + (dx / dist) * step;
     const nz = pos.z + (dz / dist) * step;
-    // Only move if the target position isn't inside a solid block
-    const by = Math.floor(pos.y);
-    if (!this.isSolidAt(Math.floor(nx), by, Math.floor(pos.z)) &&
-        !this.isSolidAt(Math.floor(nx), by + 1, Math.floor(pos.z))) {
+    // Check at body level (feet + head) — use ceil to get the actual body block
+    const feetY = Math.floor(pos.y);
+    const headY = feetY + 1;
+    // Move X axis if not blocked
+    if (!this.isSolidAt(Math.floor(nx), feetY, Math.floor(pos.z)) &&
+        !this.isSolidAt(Math.floor(nx), headY, Math.floor(pos.z))) {
       pos.x = nx;
     }
-    if (!this.isSolidAt(Math.floor(pos.x), by, Math.floor(nz)) &&
-        !this.isSolidAt(Math.floor(pos.x), by + 1, Math.floor(nz))) {
+    // Move Z axis if not blocked
+    if (!this.isSolidAt(Math.floor(pos.x), feetY, Math.floor(nz)) &&
+        !this.isSolidAt(Math.floor(pos.x), headY, Math.floor(nz))) {
       pos.z = nz;
     }
   }

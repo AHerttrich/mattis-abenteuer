@@ -79,19 +79,25 @@ export class PathFinder {
     for (const [dx, dz] of dirs) {
       const nx = x + dx, nz = z + dz;
 
-      // Walk on same level
-      if (!this.isSolid(nx, y, nz) && this.isSolid(nx, y - 1, nz) && !this.isSolid(nx, y + 1, nz)) {
+      // Walk on same level — feet clear, head clear, ground exists
+      if (!this.isSolid(nx, y, nz) && !this.isSolid(nx, y + 1, nz) && this.isSolid(nx, y - 1, nz)) {
         result.push({ x: nx, y, z: nz, cost: 1 });
         continue;
       }
-      // Step up (1 block)
-      if (this.isSolid(nx, y, nz) && !this.isSolid(nx, y + 1, nz) && !this.isSolid(nx, y + 2, nz)) {
+      // Step up (1 block) — need clearance above for 2-tall entity
+      if (this.isSolid(nx, y, nz) && !this.isSolid(nx, y + 1, nz) && !this.isSolid(nx, y + 2, nz)
+          && !this.isSolid(x, y + 2, z)) { // also check headroom at current pos
         result.push({ x: nx, y: y + 1, z: nz, cost: 2 });
         continue;
       }
       // Step down (1 block)
       if (!this.isSolid(nx, y, nz) && !this.isSolid(nx, y - 1, nz) && this.isSolid(nx, y - 2, nz)) {
         result.push({ x: nx, y: y - 1, z: nz, cost: 1.5 });
+        continue;
+      }
+      // Step down (2 blocks) — for descending slopes
+      if (!this.isSolid(nx, y, nz) && !this.isSolid(nx, y - 1, nz) && !this.isSolid(nx, y - 2, nz) && this.isSolid(nx, y - 3, nz)) {
+        result.push({ x: nx, y: y - 2, z: nz, cost: 2.5 });
       }
     }
     return result;
