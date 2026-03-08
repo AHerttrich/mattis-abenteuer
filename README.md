@@ -8,13 +8,23 @@
 
 | Feature | Description |
 |---|---|
-| **Voxel World** | Procedurally generated 3D world with diverse biomes and materials |
-| **Survival & Crafting** | Wide spectrum of resources, tools, weapons, and armor to craft |
-| **Castle Building** | Build your own fortress — structures determine which warriors spawn |
-| **Army Management** | Warriors auto-spawn from castle buildings and march toward the enemy |
-| **Castle Warfare** | Siege the enemy castle with warriors and catapults |
-| **Exploration** | Find the hidden, heavily-guarded enemy castle across the vast world |
-| **LAN Multiplayer** | Co-op mode — fight the AI castle together over your home network (WebRTC P2P) |
+| **Voxel World** | Procedurally generated 3D world with 6 diverse biomes and 80+ block types |
+| **Survival & Crafting** | 50+ items, 30+ recipes, hunger system, tools & weapons |
+| **Castle Building** | Build your fortress — structures determine which warriors spawn |
+| **Base Building View** | 2D map overview of your base with drag-to-rearrange, demolish, tooltips |
+| **Army Management** | Warriors auto-spawn, march, and siege the enemy castle |
+| **Castle Warfare** | Siege with catapults, boulders, and full army AI |
+| **Villages & NPCs** | Discover villages with villagers — trade, recruit warriors, buy rare items |
+| **Farming** | Plant wheat/carrot/potato/pumpkin, grow crops, harvest food |
+| **XP & Leveling** | Gain XP from kills, mining, crafting, quests → level up → stat bonuses |
+| **Quest System** | 10 dynamic quests with kill/mine/craft/explore/trade objectives |
+| **Achievements** | 18 milestones with toast popups and death screen stats |
+| **Enchanting** | 6 enchantments: fire, knockback, lifesteal, haste, sharpness, fortune |
+| **Potions** | 6 potion types: healing, speed, strength, resistance, night vision, fire resist |
+| **Mounts** | Rideable horses near villages — 2.5× speed boost |
+| **Exploration** | Find dungeons, ruins, villages, and the hidden enemy castle |
+| **Ambient Sounds** | Biome-based audio: birds, wind, cave drips, desert, crickets, echoes |
+| **LAN Multiplayer** | Co-op via WebRTC P2P — fight the AI castle together |
 
 ## 🏗 Tech Stack
 
@@ -85,12 +95,16 @@ make ci        # Run full CI locally (lint + test + build)
 
 ## 🎯 Game Concept
 
-1. **Explore** — Traverse a vast voxel world to gather resources
-2. **Craft** — Build tools, weapons, armor, and siege equipment
-3. **Build** — Construct your castle — each building type spawns different warriors
-4. **Discover** — Find the hidden enemy castle deep in the world
-5. **Siege** — Send your army and catapults to destroy the enemy fortress
-6. **Win** — Reduce the enemy castle to rubble!
+1. **Explore** — Traverse a vast voxel world to gather resources, discover villages and dungeons
+2. **Craft** — Build tools, weapons, armor, potions, and siege equipment
+3. **Farm** — Plant crops, grow food, and brew potions for survival
+4. **Build** — Construct your castle — each building type spawns different warriors
+5. **Trade** — Visit villages to trade with NPCs, recruit warriors, buy rare items
+6. **Level Up** — Gain XP from everything you do — unlock stat bonuses and achievements
+7. **Quest** — Complete dynamic quests for rare rewards
+8. **Discover** — Find the hidden enemy castle deep in the world
+9. **Siege** — Send your army and catapults to destroy the enemy fortress
+10. **Win** — Reduce the enemy castle to rubble!
 
 ## 🔗 Related Projects
 

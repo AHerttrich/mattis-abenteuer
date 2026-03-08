@@ -163,8 +163,17 @@ export class BaseBuildView {
       btn.appendChild(header);
 
       const costDiv = document.createElement('div');
-      costDiv.style.cssText = 'font-size:10px;color:#7f8c8d;margin-top:4px;line-height:1.4;';
-      costDiv.textContent = opt.cost.map(c => `${c.count}× ${c.itemId.replace(/_/g, ' ')}`).join(', ');
+      costDiv.style.cssText = 'font-size:10px;margin-top:4px;line-height:1.5;';
+      for (const c of opt.cost) {
+        const have = this.inventory.countItem(c.itemId);
+        const enough = have >= c.count;
+        const color = enough ? '#2ecc71' : '#e74c3c';
+        const name = c.itemId.replace(/_/g, ' ');
+        const line = document.createElement('div');
+        line.style.color = color;
+        line.textContent = `${c.count}× ${name} (${have})`;
+        costDiv.appendChild(line);
+      }
       btn.appendChild(costDiv);
 
       // HP info

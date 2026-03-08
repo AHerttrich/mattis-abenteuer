@@ -38,6 +38,24 @@ graph TB
         HP[Health System<br/>HP & Status Effects]
     end
 
+    subgraph "Progression Systems"
+        XP[XP System<br/>Levels & Stat Bonuses]
+        QS[Quest System<br/>Dynamic Objectives]
+        ACH[Achievement System<br/>Milestones & Toasts]
+    end
+
+    subgraph "RPG Systems"
+        FARM[Farming System<br/>Plant & Harvest]
+        ENCH[Enchant System<br/>Weapon Upgrades]
+        POT[Potion System<br/>Brewing & Effects]
+    end
+
+    subgraph "NPC Systems"
+        VS[Villager System<br/>Trade & Recruit]
+        MT[Mount System<br/>Horses & Speed]
+        AMB[Ambient Sounds<br/>Biome Audio]
+    end
+
     subgraph "Castle Systems"
         CB[Castle Builder<br/>Structure Placement]
         WS[Warrior Spawner<br/>Building → Troops]
@@ -76,6 +94,11 @@ graph TB
     AA --> PF
     EA --> PF
     SG --> BM
+    COM --> XP
+    QS --> INV
+    VS --> INV
+    FARM --> INV
+    MT --> I
 ```
 
 ## Technology Choices

@@ -294,16 +294,27 @@ Optimizes voxel rendering by combining adjacent same-type faces into larger quad
 
 | System | Status | Notes |
 |---|---|---|
-| Three.js renderer | ✅ Working | PCFSoftShadowMap, shadows, fog, day/night cycle |
+| Three.js renderer | ✅ Working | PCFSoftShadowMap, shadows, fog, day/night cycle, post-processing |
 | Voxel engine | ✅ Working | 16³ chunks, greedy meshing, 80+ block types |
 | Player controller | ✅ Working | FPS movement, AABB collision, gravity, sprint, hunger |
 | World generation | ✅ Working | Simplex noise, 6 biomes, structures (dungeons, villages, ruins) |
 | Crafting system | ✅ Working | 30+ recipes, Hand & Anvil stations, crafting UI |
-| Combat system | ✅ Working | Melee (cone), projectiles (gravity arc), damage numbers |
+| Combat system | ✅ Working | Melee (cone), projectiles (gravity arc), damage numbers, crits |
 | Castle system | ✅ Working | 8 building types, warrior spawning, build mode, siege, castle boss |
 | AI / Pathfinding | ✅ Working | A* wired to WarriorManager, 8-state AI, archer retreat logic |
-| UI / HUD | ✅ Working | HUD, minimap, crafting UI, score dashboard, tutorial, death screen |
+| UI / HUD | ✅ Working | HUD, minimap, crafting UI, inventory UI, trading UI, base build view |
 | Save / Load | ✅ Working | F5/F9, 60s auto-save, LocalStorage |
-| Networking | ✅ Working | PeerJS WebRTC P2P, host-authoritative co-op, warrior/castle/game-over sync |
-| Effects | ✅ Working | Particle system, sky dome, torch lights, procedural Web Audio |
-| Achievements | ✅ Working | 16 progression achievements with toast notifications |
+| Networking | ✅ Working | PeerJS WebRTC P2P, host-authoritative co-op |
+| Effects | ✅ Working | Particles, sky dome, torch lights, weather, procedural Web Audio |
+| Achievements | ✅ Working | 18 milestones with toast notifications and death screen stats |
+| Village NPCs | ✅ Working | 4 professions, trade tables, recruitment, wander AI, 3D meshes |
+| Base Build View | ✅ Working | 2D canvas map, rearrange, demolish 50% refund, compass, tooltips |
+| Inventory UX | ✅ Working | Drag & drop, tooltips, split stack, rich item info |
+| XP & Progression | ✅ Working | XP from kills/mining/crafting/quests, level-up stat bonuses |
+| Farming | ✅ Working | 4 crops, growth stages, water bonus, harvest loot |
+| Quest System | ✅ Working | 10 quest templates, event-driven progress, auto-refresh |
+| Enchanting | ✅ Working | 6 enchantments: fire, knockback, lifesteal, speed, sharpness, fortune |
+| Potions | ✅ Working | 6 potion types with active effects and duration tracking |
+| Mounts | ✅ Working | Horses near villages, R-key mount/dismount, 2.5× speed |
+| Ambient Sounds | ✅ Working | 7 biome-based sounds via Web Audio synthesis |
+| Item Registry | ✅ Working | 75+ items (blocks, tools, weapons, armor, food, potions, dungeon loot) |

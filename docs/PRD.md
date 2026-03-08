@@ -42,6 +42,17 @@ Most voxel survival games lack a clear objective and strategic depth. Players bu
 | FR-18 | Basic HUD (health, inventory, minimap) | Must | ✅ Done — HUD, minimap, score dashboard (Tab), damage numbers |
 | FR-19 | Sound effects and ambient audio | Could | ✅ Done — Procedural Web Audio: mine, place, hit, craft, jump, explosion, ambient |
 | FR-20 | Save/load game state | Should | ✅ Done — F5/F9 save/load, 60s auto-save via LocalStorage |
+| FR-21 | Village NPCs with trading | Should | ✅ Done — 4 professions (blacksmith/farmer/merchant/recruiter), trade tables |
+| FR-22 | Base building 2D map view | Should | ✅ Done — Bird's-eye canvas, rearrange, demolish with 50% refund, tooltips |
+| FR-23 | Inventory drag & drop UI | Should | ✅ Done — Drag-and-drop, tooltips, split stack, rich item info |
+| FR-24 | XP & level progression system | Should | ✅ Done — XP from kills/mining/crafting/quests, level-up stat bonuses |
+| FR-25 | Farming system (plant/grow/harvest) | Should | ✅ Done — 4 crops (wheat/carrot/potato/pumpkin), water bonus, growth stages |
+| FR-26 | Quest system with dynamic objectives | Should | ✅ Done — 10 quest templates, event-driven progress, auto-refresh |
+| FR-27 | Achievement milestones | Could | ✅ Done — 18 achievements, toast popups, death screen stats |
+| FR-28 | Enchanting system for weapons | Could | ✅ Done — 6 enchantments: fire, knockback, lifesteal, speed, sharpness, fortune |
+| FR-29 | Potion brewing & effects | Could | ✅ Done — 6 potions: healing, speed, strength, resistance, night vision, fire resist |
+| FR-30 | Rideable mounts | Could | ✅ Done — Horses near villages, R-key mount/dismount, 2.5× speed |
+| FR-31 | Biome-based ambient sounds | Could | ✅ Done — 7 biome sounds via Web Audio synthesis |
 
 ## Non-Functional Requirements
 
@@ -100,6 +111,28 @@ Most voxel survival games lack a clear objective and strategic depth. Players bu
 - Enemy variety (different guard types)
 - Performance optimization
 
+### Phase 5: Villages & NPCs 🏘️
+- Village NPC system (4 professions: blacksmith, farmer, merchant, recruiter)
+- Trading UI (buy/sell items, recruit warriors)
+- Base building 2D map view (rearrange, demolish, compass, tooltips)
+- Inventory UX overhaul (drag & drop, tooltips, split stack)
+
+### Phase 6: Combat & Balance ⚔️
+- Combat polish (knockback, crits, damage numbers, attack cooldowns)
+- Wave system (enemy raids on player castle)
+- Cave mob system (skeletons, spiders in underground)
+- Weather system (rain, snow, fog)
+
+### Phase 7: Full Feature Expansion 🌟
+- XP & level progression (stat bonuses per level)
+- Farming system (4 crops, growth stages, water bonus)
+- Quest system (10 dynamic quests with auto-refresh)
+- Achievement system (18 milestones, toast popups)
+- Enchanting system (6 weapon enchantments)
+- Potion system (6 potion types with active effects)
+- Mount system (rideable horses, 2.5× speed)
+- Ambient sound system (7 biome-based sounds)
+
 ## Implementation Status
 
 | Phase | Progress | Notes |
@@ -107,5 +140,8 @@ Most voxel survival games lack a clear objective and strategic depth. Players bu
 | Phase 1: Foundation | 🟢 100% | Voxel engine, player controller, block placement, world gen |
 | Phase 2: Survival & Crafting | 🟢 100% | Inventory, crafting UI/recipes, mining progress, fall damage |
 | Phase 3: Castle Warfare | 🟢 100% | Castles, warriors, AI, catapult projectiles, win/loss |
-| Phase 4: Polish & Content | 🟢 90% | Day/night, 6 biomes, minimap, sound, save/load — multiplayer remaining |
+| Phase 4: Polish & Content | 🟢 100% | Day/night, 6 biomes, minimap, sound, save/load, multiplayer |
+| Phase 5: Villages & NPCs | 🟢 100% | NPC trading, base building view, inventory UX overhaul |
+| Phase 6: Combat & Balance | 🟢 100% | Waves, cave mobs, weather, combat polish |
+| Phase 7: Full Feature Expansion | 🟢 100% | XP, farming, quests, achievements, enchanting, potions, mounts, ambient |
 

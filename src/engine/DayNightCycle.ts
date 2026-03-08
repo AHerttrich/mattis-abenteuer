@@ -16,7 +16,7 @@ export class DayNightCycle {
     dawn: new THREE.Color(0xff9966),
     day: new THREE.Color(0x87ceeb),
     dusk: new THREE.Color(0xff6633),
-    night: new THREE.Color(0x0a0a2e),
+    night: new THREE.Color(0x151540),
   };
 
   constructor(scene: THREE.Scene, sunLight: THREE.DirectionalLight, ambientLight: THREE.AmbientLight) {
@@ -73,8 +73,8 @@ export class DayNightCycle {
     const t = this.timeOfDay;
     // Sun intensity peaks at noon (0.5), zero at night
     const sunAngle = Math.sin(t * Math.PI);
-    const sunIntensity = Math.max(0, sunAngle) * 0.9;
-    const ambientIntensity = 0.15 + Math.max(0, sunAngle) * 0.5;
+    const sunIntensity = Math.max(0, sunAngle) * 1.1;
+    const ambientIntensity = 0.35 + Math.max(0, sunAngle) * 0.45;
 
     this.sunLight.intensity = sunIntensity;
     this.ambientLight.intensity = ambientIntensity;

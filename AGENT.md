@@ -23,16 +23,16 @@ make help       # List all targets
 ```
 src/
 ├── main.ts          # Three.js bootstrap, entry point
-├── engine/          # Renderer, physics, input, game loop
-├── world/           # Voxel chunks, terrain gen, biomes
-├── crafting/        # Recipe registry, inventory, workbench
+├── engine/          # Renderer, physics, game loop, XP, quests, farming, potions, achievements, ambient sounds
+├── world/           # Voxel chunks, terrain gen, biomes, structures
+├── crafting/        # Recipe registry, inventory, item defs (75+ items)
 ├── combat/          # Damage calc, weapons, projectiles
 ├── castle/          # Building placement, spawner logic, siege
-├── entities/        # Player, warriors, enemies (ECS-based)
+├── entities/        # Player, warriors, enemies, villagers, mounts (ECS-based)
 ├── ai/              # Pathfinding (A*), army AI, enemy castle AI
-├── ui/              # HUD, menus, crafting UI, ScoreDashboard
+├── ui/              # HUD, menus, crafting UI, inventory UI, trading UI, base build view
 ├── network/         # PeerJS WebRTC multiplayer (host/join, sync)
-├── effects/         # Particles, sky dome, torch lights, water
+├── effects/         # Particles, sky dome, torch lights, weather, post-processing
 └── __tests__/       # Vitest unit + integration tests
 docs/                # PRD, ARCH, SPEC, SDLC
 .github/workflows/   # CI pipeline
@@ -41,10 +41,11 @@ docs/                # PRD, ARCH, SPEC, SDLC
 ## Key Patterns
 
 - **ECS Architecture** — Entities have components; systems process them
-- **Chunk-based world** — 16×16×16 voxel chunks, lazy-loaded
+- **Chunk-based world** — 16×16×64 voxel chunks, lazy-loaded
 - **State machines** — Game state, entity AI, combat phases
-- **Event bus** — Decoupled communication between systems
+- **Event bus** — Decoupled communication between systems (`eventBus` + `Events` constants)
 - **Host-authoritative multiplayer** — PeerJS WebRTC P2P, host owns game state
+- **System instantiation** — All systems created in `main.ts`, updated in game loop
 - **Naming** — `camelCase` vars, `PascalCase` types, `UPPER_SNAKE` constants
 
 ## Key Bindings
@@ -55,13 +56,17 @@ docs/                # PRD, ARCH, SPEC, SDLC
 | `Space` | Jump |
 | `Shift` | Sprint |
 | `C` | Crafting UI |
-| `B` | Castle Build Mode |
+| `I` | Inventory (drag & drop, split stack, tooltips) |
+| `B` | Base Building View (2D map, place/rearrange/demolish) |
+| `E` | Trade with villager / Quick craft |
+| `R` | Mount / Dismount horse |
+| `F` | Eat food (auto-selects best) |
 | `N` | Multiplayer Menu (Host / Join) |
+| `M` | Toggle sound |
 | `Tab` | Score Dashboard |
-| `F` | Eat food |
 | `F5` | Save game |
 | `F9` | Load game |
-| `ESC` | Pause menu |
+| `ESC` | Close UI / Pause menu |
 
 ## Env Vars
 

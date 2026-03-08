@@ -64,12 +64,25 @@ export class CastleBuildUI {
   private createButtons(): void {
     for (const opt of BUILDING_OPTIONS) {
       const btn = document.createElement('button');
-      btn.style.cssText = 'background:rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:12px;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px;';
+      btn.style.cssText = 'background:rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:12px;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:100px;';
 
       const canAfford = this.checkCost(opt.cost);
       if (!canAfford) btn.style.opacity = '0.4';
 
-      btn.innerHTML = `<span style="font-size:20px;">${opt.icon}</span><span>${opt.label}</span>`;
+      // Header with icon and label
+      let html = `<span style="font-size:20px;">${opt.icon}</span><span style="font-weight:bold;">${opt.label}</span>`;
+      // Cost lines with have/need
+      html += '<div style="font-size:10px;line-height:1.5;margin-top:2px;width:100%;">';
+      for (const c of opt.cost) {
+        const have = this.inventory.countItem(c.itemId);
+        const enough = have >= c.count;
+        const color = enough ? '#2ecc71' : '#e74c3c';
+        const name = c.itemId.replace(/_/g, ' ');
+        html += `<div style="color:${color};">${c.count}× ${name} <span style="opacity:0.7;">(${have})</span></div>`;
+      }
+      html += '</div>';
+      btn.innerHTML = html;
+
       btn.addEventListener('click', () => this.selectBuilding(opt));
       btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#f1c40f'; });
       btn.addEventListener('mouseleave', () => { btn.style.borderColor = this.selectedBuilding === opt ? '#2ecc71' : 'rgba(255,255,255,0.3)'; });
@@ -226,12 +239,9 @@ export class CastleBuildUI {
   }
 
   private refreshButtons(): void {
-    const buttons = this.overlay.querySelectorAll('button');
-    buttons.forEach((btn, i) => {
-      const opt = BUILDING_OPTIONS[i];
-      (btn as HTMLElement).style.opacity = this.checkCost(opt.cost) ? '1' : '0.4';
-      (btn as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)';
-    });
+    // Rebuild buttons to update inventory counts
+    this.overlay.innerHTML = '';
+    this.createButtons();
   }
 
   toggle(): void {
