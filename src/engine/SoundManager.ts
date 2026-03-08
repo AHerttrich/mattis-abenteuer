@@ -364,6 +364,97 @@ export class SoundManager {
     return src;
   }
 
+  /** War cry — aggressive battle shout. */
+  playWarCry(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return;
+    this.ensureResumed();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+    osc.type = 'sawtooth';
+    const osc2 = this.ctx.createOscillator();
+    osc2.frequency.setValueAtTime(320, now);
+    osc2.frequency.exponentialRampToValueAtTime(160, now + 0.15);
+    osc2.type = 'sawtooth';
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.connect(gain).connect(this.masterGain);
+    osc2.connect(gain);
+    osc.start(now); osc.stop(now + 0.2);
+    osc2.start(now); osc2.stop(now + 0.2);
+  }
+
+  /** Sword swing — fast whoosh. */
+  playSwordSwing(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return;
+    this.ensureResumed();
+    const now = this.ctx.currentTime;
+    const noise = this.createNoiseBurst(0.08);
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 1500;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    if (noise) {
+      noise.connect(filter).connect(gain).connect(this.masterGain);
+      noise.start(now); noise.stop(now + 0.08);
+    }
+  }
+
+  /** Panic — frightened whimper. */
+  playPanic(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return;
+    this.ensureResumed();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.frequency.setValueAtTime(500, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+    osc.type = 'sine';
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.connect(gain).connect(this.masterGain);
+    osc.start(now); osc.stop(now + 0.1);
+  }
+
+  /** Cavalry charge — galloping thuds. */
+  playCavalryCharge(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return;
+    this.ensureResumed();
+    const now = this.ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const osc = this.ctx.createOscillator();
+      osc.frequency.setValueAtTime(80, now + i * 0.07);
+      osc.frequency.exponentialRampToValueAtTime(40, now + i * 0.07 + 0.05);
+      osc.type = 'sine';
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.15, now + i * 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.07 + 0.05);
+      osc.connect(gain).connect(this.masterGain);
+      osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.05);
+    }
+  }
+
+  /** Catapult windup — creaking tension. */
+  playCatapultWindup(): void {
+    if (!this.enabled || !this.ctx || !this.masterGain) return;
+    this.ensureResumed();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(400, now + 0.5);
+    osc.type = 'triangle';
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    osc.connect(gain).connect(this.masterGain);
+    osc.start(now); osc.stop(now + 0.5);
+  }
+
   setVolume(v: number): void {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.masterGain) this.masterGain.gain.value = this.volume;

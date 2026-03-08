@@ -2,7 +2,7 @@
  * AIStateMachine — Controls entity AI behavior transitions.
  */
 
-import { AIState } from '../ecs/Component';
+import { AIState, WarriorType } from '../ecs/Component';
 import type { PositionComponent, AIComponent, HealthComponent } from '../ecs/Component';
 import { AI_UPDATE_INTERVAL } from '../utils/constants';
 
@@ -15,8 +15,11 @@ export interface AIContext {
   nearestEnemyId: string | null;
   nearestEnemyPos?: { x: number; z: number };
   isArcher?: boolean;
+  warriorType?: WarriorType;
   targetCastleX?: number;
   targetCastleZ?: number;
+  homeCastleX?: number;
+  homeCastleZ?: number;
 }
 
 export class AIStateMachine {
@@ -60,6 +63,8 @@ export class AIStateMachine {
         if (ctx.health.current < ctx.health.max * 0.2) return this.transition(ai, AIState.FLEE);
         // Archers kite: retreat if enemy gets too close
         if (ctx.isArcher && enemyDist !== null && enemyDist < 4) return this.transition(ai, AIState.RETREAT);
+        // Catapults retreat if enemy gets too close
+        if (ctx.warriorType === WarriorType.CATAPULT_OPERATOR && enemyDist !== null && enemyDist < 10) return this.transition(ai, AIState.RETREAT);
         if (enemyDist === null || enemyDist > ctx.attackRange) return this.transition(ai, AIState.CHASE);
         return AIState.ATTACK;
 
@@ -73,8 +78,8 @@ export class AIStateMachine {
         return AIState.FLEE;
 
       case AIState.RETREAT:
-        // Archers back off then re-engage
-        if (enemyDist === null || enemyDist >= 8) return this.transition(ai, AIState.ATTACK);
+        // Archers/catapults back off then re-engage
+        if (enemyDist === null || enemyDist >= (ctx.isArcher ? 8 : 15)) return this.transition(ai, AIState.ATTACK);
         return AIState.RETREAT;
 
       default:
@@ -119,8 +124,21 @@ export class AIStateMachine {
         return null;
 
       case AIState.FLEE:
+        // Retreat toward home castle (instead of random direction)
+        if (ctx.homeCastleX !== undefined && ctx.homeCastleZ !== undefined) {
+          return { x: ctx.homeCastleX, y: pos.y, z: ctx.homeCastleZ };
+        }
+        // Fallback: move away from enemy
+        if (ctx.nearestEnemyPos) {
+          const dx = pos.x - ctx.nearestEnemyPos.x;
+          const dz = pos.z - ctx.nearestEnemyPos.z;
+          const len = Math.sqrt(dx * dx + dz * dz) || 1;
+          return { x: pos.x + (dx / len) * 10, y: pos.y, z: pos.z + (dz / len) * 10 };
+        }
+        return null;
+
       case AIState.RETREAT:
-        // Move away from nearest enemy
+        // Move away from nearest enemy (archers/catapults kiting)
         if (ctx.nearestEnemyPos) {
           const dx = pos.x - ctx.nearestEnemyPos.x;
           const dz = pos.z - ctx.nearestEnemyPos.z;

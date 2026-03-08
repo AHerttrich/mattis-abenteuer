@@ -198,8 +198,43 @@ export class EnemyCastleGenerator {
     cm.setBlockAtWorld(x - 2, y + 3, z - 2, BlockType.TORCH);
   }
 
-  private placeBuilding(cm: ChunkManager, x: number, y: number, z: number, _type: BuildingType): void {
-    // Generic 5x5 building
+  private placeBuilding(cm: ChunkManager, x: number, y: number, z: number, type: BuildingType): void {
+    switch (type) {
+      case BuildingType.BARRACKS:
+        this.placeBarracks(cm, x, y, z);
+        break;
+      case BuildingType.ARCHERY_RANGE:
+        this.placeArcheryRange(cm, x, y, z);
+        break;
+      case BuildingType.STABLE:
+        this.placeStable(cm, x, y, z);
+        break;
+      case BuildingType.SIEGE_WORKSHOP:
+        this.placeSiegeWorkshop(cm, x, y, z);
+        break;
+      default:
+        this.placeGenericBuilding(cm, x, y, z);
+    }
+  }
+
+  private placeGenericBuilding(cm: ChunkManager, x: number, y: number, z: number): void {
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dz = -2; dz <= 2; dz++) {
+        cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
+        for (let dy = 1; dy < 4; dy++) {
+          const isWall = Math.abs(dx) === 2 || Math.abs(dz) === 2;
+          cm.setBlockAtWorld(x + dx, y + dy, z + dz, isWall ? BlockType.STONE_BRICK : BlockType.AIR);
+        }
+        cm.setBlockAtWorld(x + dx, y + 4, z + dz, BlockType.PLANKS_DARK);
+      }
+    }
+    cm.setBlockAtWorld(x + 2, y + 1, z, BlockType.AIR);
+    cm.setBlockAtWorld(x + 2, y + 2, z, BlockType.AIR);
+    cm.setBlockAtWorld(x, y + 3, z, BlockType.TORCH);
+  }
+
+  private placeBarracks(cm: ChunkManager, x: number, y: number, z: number): void {
+    // Stone walls, dark plank roof, beds inside, weapon racks, banner
     for (let dx = -2; dx <= 2; dx++) {
       for (let dz = -2; dz <= 2; dz++) {
         cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
@@ -213,7 +248,98 @@ export class EnemyCastleGenerator {
     // Door
     cm.setBlockAtWorld(x + 2, y + 1, z, BlockType.AIR);
     cm.setBlockAtWorld(x + 2, y + 2, z, BlockType.AIR);
-    // Torch inside
-    cm.setBlockAtWorld(x, y + 3, z, BlockType.TORCH);
+    // Beds (planks on floor)
+    cm.setBlockAtWorld(x - 1, y + 1, z - 1, BlockType.PLANKS_OAK);
+    cm.setBlockAtWorld(x - 1, y + 1, z + 1, BlockType.PLANKS_OAK);
+    cm.setBlockAtWorld(x + 1, y + 1, z - 1, BlockType.PLANKS_OAK);
+    // Weapon rack (iron blocks on wall)
+    cm.setBlockAtWorld(x - 2, y + 2, z, BlockType.IRON_BLOCK);
+    // Torches
+    cm.setBlockAtWorld(x, y + 3, z + 2, BlockType.TORCH);
+    cm.setBlockAtWorld(x, y + 3, z - 2, BlockType.TORCH);
+    // Banner outside
+    cm.setBlockAtWorld(x + 2, y + 4, z, BlockType.BANNER_ENEMY);
+  }
+
+  private placeArcheryRange(cm: ChunkManager, x: number, y: number, z: number): void {
+    // Open-air: low walls (2 blocks high), target posts
+    cm.setBlockAtWorld(x, y, z, BlockType.CASTLE_FLOOR);
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dz = -2; dz <= 2; dz++) {
+        cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
+        // Low wall only on edges, 2 blocks high
+        const isEdge = Math.abs(dx) === 2 || Math.abs(dz) === 2;
+        if (isEdge) {
+          cm.setBlockAtWorld(x + dx, y + 1, z + dz, BlockType.STONE_BRICK);
+          cm.setBlockAtWorld(x + dx, y + 2, z + dz, BlockType.STONE_BRICK);
+        }
+      }
+    }
+    // Opening/door
+    cm.setBlockAtWorld(x + 2, y + 1, z, BlockType.AIR);
+    cm.setBlockAtWorld(x + 2, y + 2, z, BlockType.AIR);
+    // Target posts (logs)
+    cm.setBlockAtWorld(x - 1, y + 1, z - 1, BlockType.WOOD_OAK);
+    cm.setBlockAtWorld(x - 1, y + 2, z - 1, BlockType.WOOD_OAK);
+    cm.setBlockAtWorld(x + 1, y + 1, z + 1, BlockType.WOOD_OAK);
+    cm.setBlockAtWorld(x + 1, y + 2, z + 1, BlockType.WOOD_OAK);
+    // Banner
+    cm.setBlockAtWorld(x - 2, y + 3, z, BlockType.BANNER_ENEMY);
+  }
+
+  private placeStable(cm: ChunkManager, x: number, y: number, z: number): void {
+    // Wood frame with fence (low wall), hay bales inside
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dz = -2; dz <= 2; dz++) {
+        cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.DIRT);
+        const isEdge = Math.abs(dx) === 2 || Math.abs(dz) === 2;
+        if (isEdge) {
+          // Fence posts: every other block on edge
+          cm.setBlockAtWorld(x + dx, y + 1, z + dz, BlockType.PLANKS_OAK);
+        }
+      }
+    }
+    // Roof on one side (lean-to)
+    for (let dz = -2; dz <= 2; dz++) {
+      cm.setBlockAtWorld(x - 2, y + 2, z + dz, BlockType.PLANKS_OAK);
+      cm.setBlockAtWorld(x - 1, y + 2, z + dz, BlockType.PLANKS_OAK);
+    }
+    // Door opening
+    cm.setBlockAtWorld(x + 2, y + 1, z, BlockType.AIR);
+    // Hay bales (gold blocks as proxy)
+    cm.setBlockAtWorld(x - 1, y + 1, z - 1, BlockType.GOLD_BLOCK);
+    cm.setBlockAtWorld(x - 1, y + 1, z + 1, BlockType.GOLD_BLOCK);
+    // Torch
+    cm.setBlockAtWorld(x, y + 2, z, BlockType.TORCH);
+    // Banner
+    cm.setBlockAtWorld(x + 2, y + 2, z, BlockType.BANNER_ENEMY);
+  }
+
+  private placeSiegeWorkshop(cm: ChunkManager, x: number, y: number, z: number): void {
+    // Reinforced: stone brick + iron blocks, anvil inside
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dz = -2; dz <= 2; dz++) {
+        cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
+        for (let dy = 1; dy < 4; dy++) {
+          const isWall = Math.abs(dx) === 2 || Math.abs(dz) === 2;
+          // Alternate stone/iron on walls
+          const blockType = isWall
+            ? (dy === 2 && (dx + dz) % 2 === 0 ? BlockType.IRON_BLOCK : BlockType.STONE_BRICK)
+            : BlockType.AIR;
+          cm.setBlockAtWorld(x + dx, y + dy, z + dz, blockType);
+        }
+        cm.setBlockAtWorld(x + dx, y + 4, z + dz, BlockType.IRON_BLOCK);
+      }
+    }
+    // Door
+    cm.setBlockAtWorld(x + 2, y + 1, z, BlockType.AIR);
+    cm.setBlockAtWorld(x + 2, y + 2, z, BlockType.AIR);
+    // Anvil
+    cm.setBlockAtWorld(x, y + 1, z, BlockType.ANVIL);
+    // Torches
+    cm.setBlockAtWorld(x - 1, y + 3, z - 1, BlockType.TORCH);
+    cm.setBlockAtWorld(x + 1, y + 3, z + 1, BlockType.TORCH);
+    // Banner
+    cm.setBlockAtWorld(x + 2, y + 4, z, BlockType.BANNER_ENEMY);
   }
 }

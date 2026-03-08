@@ -103,14 +103,18 @@ export class CombatSystem {
     return Math.max(1, Math.round(baseDamage - armor * 0.5));
   }
 
-  /** Find nearest enemy entity within range. */
+  /** Find best enemy target using weighted scoring. */
   findNearestEnemy(entity: Entity, maxRange: number): Entity | null {
     const pos = entity.getComponent<PositionComponent>('position');
     const team = entity.getComponent<TeamComponent>('team');
+    const combat = entity.getComponent<CombatComponent>('combat');
+    const warrior = entity.getComponent<WarriorComponent>('warrior');
     if (!pos || !team) return null;
 
-    let nearest: Entity | null = null;
-    let nearestDist = maxRange;
+    let best: Entity | null = null;
+    let bestScore = -Infinity;
+    const attackRange = combat?.range ?? MELEE_RANGE;
+    const isArcher = warrior?.warriorType === WarriorType.ARCHER;
 
     const entities = this.world.query('position', 'health', 'team');
     for (const other of entities) {
@@ -121,12 +125,30 @@ export class CombatSystem {
       if (oHealth.isDead) continue;
       const oPos = other.getComponent<PositionComponent>('position')!;
       const dist = this.distance(pos, oPos);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearest = other;
+      if (dist > maxRange) continue;
+
+      // Weighted scoring
+      let score = 10 / (dist + 1); // closer = higher base score
+      if (dist <= attackRange) score += 5; // bonus for already in range
+      const hpRatio = oHealth.current / oHealth.max;
+      if (hpRatio < 0.3) score += 3; // bonus for low-HP targets (finish them off)
+
+      // Type-based preferences
+      const oWarrior = other.getComponent<WarriorComponent>('warrior');
+      if (isArcher && oWarrior) {
+        // Archers prefer squishy targets
+        if (oWarrior.warriorType === WarriorType.ARCHER || oWarrior.warriorType === WarriorType.CATAPULT_OPERATOR) score += 2;
+      } else if (!isArcher && oWarrior) {
+        // Melee prefer nearby threats already engaging
+        if (dist < 5) score += 2;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = other;
       }
     }
-    return nearest;
+    return best;
   }
 
   /** Catapult attack — ranged AOE damage to castle blocks. */

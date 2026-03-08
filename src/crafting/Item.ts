@@ -109,6 +109,30 @@ reg({ id: 'bread', name: 'Bread', category: ItemCategory.FOOD, stackSize: 16, hu
 reg({ id: 'apple', name: 'Apple', category: ItemCategory.FOOD, stackSize: 16, hungerRestore: 4, saturationRestore: 2 });
 reg({ id: 'cooked_meat', name: 'Cooked Meat', category: ItemCategory.FOOD, stackSize: 16, hungerRestore: 8, saturationRestore: 5 });
 reg({ id: 'golden_apple', name: 'Golden Apple', category: ItemCategory.FOOD, stackSize: 16, hungerRestore: 10, saturationRestore: 8 });
+reg({ id: 'carrot', name: 'Carrot', category: ItemCategory.FOOD, stackSize: 64, hungerRestore: 4, saturationRestore: 2 });
+reg({ id: 'potato', name: 'Potato', category: ItemCategory.FOOD, stackSize: 64, hungerRestore: 3, saturationRestore: 1 });
+
+// ── Farming ──────────────────────────────────────────────────
+reg({ id: 'wheat_seeds', name: 'Wheat Seeds', category: ItemCategory.MATERIAL, stackSize: 64 });
+reg({ id: 'wheat', name: 'Wheat', category: ItemCategory.MATERIAL, stackSize: 64 });
+reg({ id: 'pumpkin_seeds', name: 'Pumpkin Seeds', category: ItemCategory.MATERIAL, stackSize: 64 });
+reg({ id: 'pumpkin', name: 'Pumpkin', category: ItemCategory.FOOD, stackSize: 16, hungerRestore: 6, saturationRestore: 3 });
+
+// ── Potions ──────────────────────────────────────────────────
+reg({ id: 'potion_healing', name: 'Healing Potion', category: ItemCategory.FOOD, stackSize: 8, hungerRestore: 0 });
+reg({ id: 'potion_speed', name: 'Speed Potion', category: ItemCategory.FOOD, stackSize: 8, hungerRestore: 0 });
+reg({ id: 'potion_strength', name: 'Strength Potion', category: ItemCategory.FOOD, stackSize: 8, hungerRestore: 0 });
+reg({ id: 'potion_resistance', name: 'Resistance Potion', category: ItemCategory.FOOD, stackSize: 8, hungerRestore: 0 });
+reg({ id: 'potion_night_vision', name: 'Night Vision Potion', category: ItemCategory.FOOD, stackSize: 8, hungerRestore: 0 });
+reg({ id: 'potion_fire_resist', name: 'Fire Resist Potion', category: ItemCategory.FOOD, stackSize: 8, hungerRestore: 0 });
+
+// ── Rare Dungeon Loot ────────────────────────────────────────
+reg({ id: 'ancient_key', name: 'Ancient Key', category: ItemCategory.MATERIAL, stackSize: 1 });
+reg({ id: 'enchanted_gem', name: 'Enchanted Gem', category: ItemCategory.MATERIAL, stackSize: 16 });
+reg({ id: 'dragon_scale', name: 'Dragon Scale', category: ItemCategory.MATERIAL, stackSize: 16 });
+reg({ id: 'phoenix_feather', name: 'Phoenix Feather', category: ItemCategory.MATERIAL, stackSize: 16 });
+reg({ id: 'diamond_sword_legendary', name: 'Legendary Diamond Sword', category: ItemCategory.WEAPON, stackSize: 1, tier: ToolTier.DIAMOND, damage: 25, durability: 2000 });
 
 export function getItemDef(id: string): ItemDef | undefined { return ITEMS.get(id); }
 export function getAllItems(): ItemDef[] { return [...ITEMS.values()]; }
+

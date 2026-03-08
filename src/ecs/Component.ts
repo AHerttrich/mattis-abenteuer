@@ -125,6 +125,7 @@ export interface WarriorComponent extends Component {
   warriorType: WarriorType;
   sourceCastleId: string;
   targetCastleId: string;
+  formationSlot: number; // lateral offset index in march formation
 }
 
 export enum WarriorType {
@@ -201,6 +202,7 @@ export function createWarrior(
   warriorType: WarriorType,
   sourceCastleId: string,
   targetCastleId: string,
+  formationSlot = 0,
 ): WarriorComponent {
-  return { type: 'warrior', warriorType, sourceCastleId, targetCastleId };
+  return { type: 'warrior', warriorType, sourceCastleId, targetCastleId, formationSlot };
 }

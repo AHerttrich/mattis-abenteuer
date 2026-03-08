@@ -62,6 +62,7 @@ import { WaveManager, WaveEvents } from './engine/WaveManager';
 import { CaveMobSystem } from './entities/CaveMobSystem';
 import { VillagerSystem } from './entities/VillagerSystem';
 import { TradingUI } from './ui/TradingUI';
+import { MountSystem } from './entities/MountSystem';
 import { WarriorType } from './ecs/Component';
 import { ParticleSystem } from './effects/ParticleSystem';
 import { SkySystem } from './effects/SkySystem';
@@ -73,6 +74,12 @@ import { NetMsgKind } from './network/NetProtocol';
 import type { NetMessage, WarriorNetState } from './network/NetProtocol';
 import { RemotePlayer } from './entities/RemotePlayer';
 import { NETWORK_TICK_RATE } from './utils/constants';
+import { XPSystem } from './engine/XPSystem';
+import { FarmingSystem } from './engine/FarmingSystem';
+import { QuestSystem } from './engine/QuestSystem';
+import { PotionSystem } from './engine/PotionSystem';
+import { AmbientSoundSystem } from './engine/AmbientSoundSystem';
+import { EnchantSystem } from './engine/EnchantSystem';
 
 // ── Three.js Setup ───────────────────────────────────────────
 const scene = new THREE.Scene();
@@ -399,8 +406,41 @@ tradingUI.onRecruit((type) => {
   hud.showInfo(`⚔️ ${type} warrior recruited!`, 2000);
 });
 
-// ── Structure Placement (villages spawn villagers) ─────────
+// ── Structure Placement (villages spawn villagers + mounts) ───
 const structureGen = new StructureGenerator(WORLD_SEED);
+const mountSystem = new MountSystem(scene);
+
+// ── Phase 7 Systems ──────────────────────────────────────
+const xpSystem = new XPSystem();
+const farmingSystem = new FarmingSystem(chunkManager);
+const questSystem = new QuestSystem();
+const potionSystem = new PotionSystem();
+const ambientSounds = new AmbientSoundSystem();
+const enchantSystem = new EnchantSystem();
+// mountSpeedMultiplier is used in player speed calculation (referenced in game loop)
+let mountSpeedMultiplier = 1; // eslint-disable-line prefer-const
+
+// XP level up
+xpSystem.onLevelUp((stats) => {
+  hud.showInfo(`⬆️ Level ${stats.level}! +${stats.bonusHp}HP +${stats.bonusDamage}DMG`, 3000);
+  soundManager.playWaveCleared();
+});
+
+// Quest completion
+questSystem.onComplete((quest) => {
+  for (const r of quest.rewards) inventory.addItem(r.itemId, r.count);
+  xpSystem.addQuestXP();
+  hud.showInfo(`🌟 Quest Complete: ${quest.icon} ${quest.name}!`, 3000);
+  soundManager.playWaveCleared();
+  questSystem.refresh();
+});
+
+// Farming harvest
+farmingSystem.onHarvest((items) => {
+  for (const it of items) inventory.addItem(it.itemId, it.count);
+  eventBus.emit('crop:harvested', {});
+  soundManager.playCraft();
+});
 
 // Place player castle blocks (near spawn, so chunk should load quickly)
 let playerCastlePlaced = false;
@@ -416,6 +456,7 @@ eventBus.on(Events.CHUNK_LOADED, () => {
     structureGen.placeStructure(loc, chunkManager, groundY);
     if (loc.type === 'village') {
       villagerSystem.spawnVillagersAtStructure(loc);
+      mountSystem.spawnHorse(loc.x + 12, loc.y + 1, loc.z + 5);
       hud.showInfo('🏘️ Village discovered!', 3000);
     }
     eventBus.emit(Events.STRUCTURE_DISCOVERED, { type: loc.type, x: loc.x, z: loc.z });
@@ -764,7 +805,7 @@ document.addEventListener('keydown', (e) => {
   }
   // Eat food with F — reads nutrition from item defs
   if (key === 'f') {
-    const foodItems = ['cooked_meat', 'bread', 'golden_apple', 'apple'];
+    const foodItems = ['cooked_meat', 'bread', 'golden_apple', 'apple', 'carrot', 'potato', 'pumpkin'];
     for (const food of foodItems) {
       if (inventory.countItem(food) > 0) {
         const def = getItemDef(food);
@@ -779,7 +820,8 @@ document.addEventListener('keydown', (e) => {
     }
   }
   if (key === 'escape') {
-    if (inventoryUI.isVisible) inventoryUI.hide();
+    if (tradingUI.isVisible) tradingUI.hide();
+    else if (inventoryUI.isVisible) inventoryUI.hide();
     else if (craftingUI.isVisible) craftingUI.hide();
     else if (baseBuildView.isVisible) baseBuildView.close();
     else if (castleBuildUI.isVisible) castleBuildUI.cancel();
@@ -802,6 +844,20 @@ document.addEventListener('keydown', (e) => {
     if (tradingUI.isVisible) { tradingUI.hide(); }
     else if (!craftingUI.isVisible && !pauseMenu.isVisible && !inventoryUI.isVisible) {
       villagerSystem.tryInteract(player.x, player.y, player.z);
+    }
+  }
+  if (key === 'r') {
+    // Mount / dismount
+    if (mountSystem.isMounted) {
+      mountSystem.dismount(player.x, player.y, player.z);
+      mountSpeedMultiplier = 1;
+      hud.showInfo('Dismounted', 1500);
+    } else {
+      const result = mountSystem.tryMount(player.x, player.y, player.z);
+      if (result) {
+        mountSpeedMultiplier = result.speed;
+        hud.showInfo(`🐎 Mounted ${result.name}! (${result.speed}x speed)`, 2000);
+      }
     }
   }
   if (key === 'tab') { e.preventDefault(); scoreDashboard.toggle(); }
@@ -966,6 +1022,20 @@ function gameLoop(): void {
   if (nearVillager && !tradingUI.isVisible) {
     hud.showInfo(`Press E to trade with ${nearVillager.name}`, 100);
   }
+
+  // Mount prompt
+  const nearMount = mountSystem.getNearestInRange(player.x, player.y, player.z);
+  if (nearMount && !mountSystem.isMounted) {
+    hud.showInfo(`Press R to mount ${nearMount.name}`, 100);
+  }
+  if (mountSystem.isMounted) {
+    hud.showInfo('🐎 Mounted! (R to dismount)', 100);
+  }
+
+  // Phase 7 system updates
+  farmingSystem.update(dt);
+  potionSystem.update(dt);
+  ambientSounds.update(dt, 'plains', player.y);
 
   // Wave system
   waveManager.update(dt);

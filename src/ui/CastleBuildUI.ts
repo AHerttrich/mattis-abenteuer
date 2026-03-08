@@ -130,24 +130,80 @@ export class CastleBuildUI {
     const { x, y, z } = this.placementPos;
     this.castle.addBuilding(this.selectedBuilding.type, x, y + 1, z);
 
-    // Place some blocks for the building
-    const size = 2;
-    for (let dx = -size; dx <= size; dx++) {
-      for (let dz = -size; dz <= size; dz++) {
-        for (let dy = 0; dy < 4; dy++) {
-          const isWall = Math.abs(dx) === size || Math.abs(dz) === size;
-          this.chunkManager.setBlockAtWorld(
-            x + dx, y + 1 + dy, z + dz,
-            isWall ? BlockType.CASTLE_WALL : (dy === 0 ? BlockType.CASTLE_FLOOR : BlockType.AIR),
-          );
+    // Type-specific 3D block placement
+    const bt = this.selectedBuilding.type;
+    if (bt === BuildingType.WALL) {
+      // 1-wide wall, 5-high with battlements
+      for (let dy = 0; dy < 5; dy++) {
+        for (let d = -2; d <= 2; d++) {
+          this.chunkManager.setBlockAtWorld(x + d, y + 1 + dy, z, BlockType.CASTLE_WALL);
+          this.chunkManager.setBlockAtWorld(x, y + 1 + dy, z + d, BlockType.CASTLE_WALL);
         }
-        this.chunkManager.setBlockAtWorld(x + dx, y + 5, z + dz, BlockType.CASTLE_WALL);
       }
+      // Battlements
+      for (let d = -2; d <= 2; d += 2) {
+        this.chunkManager.setBlockAtWorld(x + d, y + 6, z, BlockType.CASTLE_WALL);
+        this.chunkManager.setBlockAtWorld(x, y + 6, z + d, BlockType.CASTLE_WALL);
+      }
+    } else if (bt === BuildingType.GATE) {
+      // Gate with archway opening
+      for (let dy = 0; dy < 5; dy++) {
+        this.chunkManager.setBlockAtWorld(x, y + 1 + dy, z - 2, BlockType.CASTLE_GATE);
+        this.chunkManager.setBlockAtWorld(x, y + 1 + dy, z + 2, BlockType.CASTLE_GATE);
+        if (dy >= 3) this.chunkManager.setBlockAtWorld(x, y + 1 + dy, z, BlockType.CASTLE_GATE);
+      }
+      for (let dz = -2; dz <= 2; dz++) {
+        this.chunkManager.setBlockAtWorld(x, y + 6, z + dz, BlockType.CASTLE_WALL);
+      }
+    } else if (bt === BuildingType.WATCHTOWER) {
+      // Tower: 3×3×8 with wider top platform
+      for (let dy = 0; dy < 8; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dz = -1; dz <= 1; dz++) {
+            this.chunkManager.setBlockAtWorld(x + dx, y + 1 + dy, z + dz, BlockType.CASTLE_TOWER);
+          }
+        }
+      }
+      // Hollow inside
+      for (let dy = 1; dy < 7; dy++) {
+        this.chunkManager.setBlockAtWorld(x, y + 1 + dy, z, BlockType.AIR);
+      }
+      // Wide top platform
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dz = -2; dz <= 2; dz++) {
+          this.chunkManager.setBlockAtWorld(x + dx, y + 9, z + dz, BlockType.CASTLE_TOWER);
+        }
+      }
+      // Battlements
+      for (let d = -2; d <= 2; d += 2) {
+        this.chunkManager.setBlockAtWorld(x + d, y + 10, z - 2, BlockType.CASTLE_WALL);
+        this.chunkManager.setBlockAtWorld(x + d, y + 10, z + 2, BlockType.CASTLE_WALL);
+        this.chunkManager.setBlockAtWorld(x - 2, y + 10, z + d, BlockType.CASTLE_WALL);
+        this.chunkManager.setBlockAtWorld(x + 2, y + 10, z + d, BlockType.CASTLE_WALL);
+      }
+      this.chunkManager.setBlockAtWorld(x, y + 10, z, BlockType.TORCH);
+    } else {
+      // Standard buildings (barracks, archery, stable, siege)
+      const size = 2;
+      for (let dx = -size; dx <= size; dx++) {
+        for (let dz = -size; dz <= size; dz++) {
+          for (let dy = 0; dy < 4; dy++) {
+            const isWall = Math.abs(dx) === size || Math.abs(dz) === size;
+            this.chunkManager.setBlockAtWorld(
+              x + dx, y + 1 + dy, z + dz,
+              isWall ? BlockType.CASTLE_WALL : (dy === 0 ? BlockType.CASTLE_FLOOR : BlockType.AIR),
+            );
+          }
+          this.chunkManager.setBlockAtWorld(x + dx, y + 5, z + dz, BlockType.PLANKS_DARK);
+        }
+      }
+      // Door
+      this.chunkManager.setBlockAtWorld(x + size, y + 2, z, BlockType.AIR);
+      this.chunkManager.setBlockAtWorld(x + size, y + 3, z, BlockType.AIR);
+      this.chunkManager.setBlockAtWorld(x, y + 4, z, BlockType.TORCH);
     }
-    // Door
-    this.chunkManager.setBlockAtWorld(x + size, y + 2, z, BlockType.AIR);
-    this.chunkManager.setBlockAtWorld(x + size, y + 3, z, BlockType.AIR);
-    this.chunkManager.setBlockAtWorld(x, y + 4, z, BlockType.TORCH);
+    // Player banner
+    this.chunkManager.setBlockAtWorld(x, y + 6, z, BlockType.BANNER_PLAYER);
 
     this.hud.showInfo(`🏗️ ${this.selectedBuilding.label} built!`);
     this.removeGhost();

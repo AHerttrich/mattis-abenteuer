@@ -14,6 +14,7 @@ import type { AIContext } from '../ai/AIStateMachine';
 import { PathFinder } from '../ai/PathFinder';
 import type { ChunkManager } from '../world/ChunkManager';
 import { isBlockSolid } from '../world/BlockType';
+import { soundManager } from '../engine/SoundManager';
 
 interface WarriorMesh {
   group: THREE.Group;
@@ -73,6 +74,8 @@ export class WarriorManager {
   private pathFinder: PathFinder;
   private paths = new Map<string, { waypoints: { x: number; y: number; z: number }[]; index: number; repathTimer: number }>();
   private lastPositions = new Map<string, { x: number; z: number; stuckTimer: number }>();
+  private formationSlotCounter = new Map<string, number>(); // team → next slot index
+  private lastSoundTime = new Map<string, number>(); // entityId → last sound time
 
   constructor(ecsWorld: ECSWorld, scene: THREE.Scene, combat: CombatSystem, chunkManager: ChunkManager) {
     this.ecsWorld = ecsWorld;
@@ -85,8 +88,9 @@ export class WarriorManager {
     });
 
     eventBus.on(Events.ENTITY_DIED, (data: unknown) => {
-      const { entityId } = data as { entityId: string };
-      this.removeWarrior(entityId);
+      const { entityId, pos } = data as { entityId: string; pos?: PositionComponent };
+      // Try to find the last attacker's approximate position from the entity's facing direction
+      this.removeWarrior(entityId, pos);
     });
   }
 
@@ -113,7 +117,7 @@ export class WarriorManager {
       .addComponent(createCombat(stats.damage, 1.0, stats.range))
       .addComponent(createTeam(team))
       .addComponent(createAI(GUARD_PATROL_RADIUS, GUARD_ALERT_RADIUS, GUARD_CHASE_RADIUS))
-      .addComponent(createWarrior(type, sourceCastleId, targetCastleId));
+      .addComponent(createWarrior(type, sourceCastleId, targetCastleId, this.nextFormationSlot(team)));
 
     // Set AI initial state
     const ai = entity.getComponent<AIComponent>('ai')!;
@@ -125,16 +129,18 @@ export class WarriorManager {
     }
 
     this.ecsWorld.addEntity(entity);
-    this.createMesh(entity.id, color, type);
+    this.createMesh(entity.id, color, type, team);
     return entity;
   }
 
-  private createMesh(entityId: string, color: number, type: WarriorType): void {
+  private createMesh(entityId: string, color: number, type: WarriorType, team: 'player' | 'enemy'): void {
     const group = new THREE.Group();
 
-    // Body
-    const bodyH = type === WarriorType.CAVALRY ? 1.2 : 0.9;
-    const bodyGeo = new THREE.BoxGeometry(0.5, bodyH, 0.4);
+    // Body dimensions vary by type
+    const bodyW = type === WarriorType.SHIELD_BEARER ? 0.6 : type === WarriorType.ARCHER ? 0.4 : 0.5;
+    const bodyH = type === WarriorType.CAVALRY ? 1.2 : type === WarriorType.CATAPULT_OPERATOR ? 0.7 : 0.9;
+    const bodyD = type === WarriorType.SHIELD_BEARER ? 0.5 : 0.4;
+    const bodyGeo = new THREE.BoxGeometry(bodyW, bodyH, bodyD);
     const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.position.y = bodyH / 2 + 0.1;
@@ -149,12 +155,32 @@ export class WarriorManager {
     head.castShadow = true;
     group.add(head);
 
+    // Eye dots (two small white cubes on front of head)
+    const eyeGeo = new THREE.BoxGeometry(0.06, 0.06, 0.02);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.3 });
+    const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.08, bodyH + 0.32, 0.18);
+    group.add(leftEye);
+    const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+    rightEye.position.set(0.08, bodyH + 0.32, 0.18);
+    group.add(rightEye);
+
+    // Shoulder plates (team-colored)
+    const shoulderGeo = new THREE.BoxGeometry(0.22, 0.08, 0.28);
+    const shoulderMat = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.3 });
+    const leftShoulder = new THREE.Mesh(shoulderGeo, shoulderMat);
+    leftShoulder.position.set(-0.35, bodyH - 0.05, 0);
+    group.add(leftShoulder);
+    const rightShoulder = new THREE.Mesh(shoulderGeo, shoulderMat);
+    rightShoulder.position.set(0.35, bodyH - 0.05, 0);
+    group.add(rightShoulder);
+
     // Arms
     const armGeo = new THREE.BoxGeometry(0.15, 0.7, 0.2);
     const armMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
     const leftArm = new THREE.Mesh(armGeo, armMat);
     leftArm.position.set(-0.35, bodyH / 2 + 0.2, 0);
-    leftArm.geometry.translate(0, -0.35, 0); // pivot at top
+    leftArm.geometry.translate(0, -0.35, 0);
     group.add(leftArm);
     const rightArm = new THREE.Mesh(armGeo, armMat.clone());
     rightArm.position.set(0.35, bodyH / 2 + 0.2, 0);
@@ -173,7 +199,32 @@ export class WarriorManager {
     rightLeg.geometry.translate(0, -0.25, 0);
     group.add(rightLeg);
 
-    // Weapon indicator
+    // ── Team Pennant Flag ──────────────────────────────────
+    const poleGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.2, 4);
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+    const pole = new THREE.Mesh(poleGeo, poleMat);
+    pole.position.set(0, bodyH + 0.9, -0.2);
+    group.add(pole);
+
+    const flagGeo = new THREE.PlaneGeometry(0.35, 0.25);
+    const flagColor = team === 'player' ? 0x2040c0 : 0xc02020;
+    const flagMat = new THREE.MeshStandardMaterial({ color: flagColor, side: THREE.DoubleSide, emissive: new THREE.Color(flagColor), emissiveIntensity: 0.15 });
+    const flag = new THREE.Mesh(flagGeo, flagMat);
+    flag.position.set(0.18, bodyH + 1.3, -0.2);
+    group.add(flag);
+
+    // Crest dot on flag (player = white circle-ish, enemy = dark cross)
+    const crestGeo = new THREE.BoxGeometry(0.08, 0.08, 0.01);
+    const crestMat = new THREE.MeshStandardMaterial({
+      color: team === 'player' ? 0xffffff : 0x000000,
+      emissive: team === 'player' ? new THREE.Color(0x4488ff) : new THREE.Color(0xff2222),
+      emissiveIntensity: 0.4,
+    });
+    const crest = new THREE.Mesh(crestGeo, crestMat);
+    crest.position.set(0.18, bodyH + 1.3, -0.19);
+    group.add(crest);
+
+    // ── Type-specific gear ─────────────────────────────────
     if (type === WarriorType.SWORDSMAN || type === WarriorType.CAVALRY) {
       const swordGeo = new THREE.BoxGeometry(0.08, 0.6, 0.08);
       const swordMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8 });
@@ -184,54 +235,116 @@ export class WarriorManager {
     }
 
     if (type === WarriorType.ARCHER) {
+      // Bow
       const bowGeo = new THREE.BoxGeometry(0.05, 0.5, 0.05);
       const bowMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
       const bow = new THREE.Mesh(bowGeo, bowMat);
       bow.position.set(0.3, 0.7, 0);
       group.add(bow);
+      // Quiver on back
+      const quiverGeo = new THREE.BoxGeometry(0.12, 0.4, 0.08);
+      const quiverMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      const quiver = new THREE.Mesh(quiverGeo, quiverMat);
+      quiver.position.set(0.08, bodyH * 0.6, -0.25);
+      quiver.rotation.z = 0.15;
+      group.add(quiver);
+      // Arrow tips poking out
+      const arrowGeo = new THREE.BoxGeometry(0.02, 0.15, 0.02);
+      const arrowMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+      for (let i = 0; i < 3; i++) {
+        const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+        arrow.position.set(0.05 + i * 0.03, bodyH * 0.6 + 0.25, -0.25);
+        group.add(arrow);
+      }
     }
 
     if (type === WarriorType.SHIELD_BEARER) {
-      // Sword
       const swordGeo = new THREE.BoxGeometry(0.08, 0.6, 0.08);
       const swordMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8 });
       const sword = new THREE.Mesh(swordGeo, swordMat);
-      sword.position.set(0.35, 0.7, 0);
+      sword.position.set(0.4, 0.7, 0);
       sword.rotation.z = 0.3;
       group.add(sword);
-      
-      // Shield
-      const shieldGeo = new THREE.BoxGeometry(0.1, 0.8, 0.6);
+      // Large shield with team color stripe
+      const shieldGeo = new THREE.BoxGeometry(0.1, 0.9, 0.7);
       const shieldMat = new THREE.MeshStandardMaterial({ color: 0x8b4513, metalness: 0.3 });
       const shield = new THREE.Mesh(shieldGeo, shieldMat);
-      shield.position.set(0, 0.6, 0.3); // In front of body
+      shield.position.set(-0.05, 0.6, 0.35);
       group.add(shield);
+      // Team stripe on shield
+      const stripeGeo = new THREE.BoxGeometry(0.11, 0.8, 0.15);
+      const stripeMat = new THREE.MeshStandardMaterial({ color: flagColor, metalness: 0.2 });
+      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+      stripe.position.set(-0.05, 0.6, 0.38);
+      group.add(stripe);
     }
 
-    // Team banner on back
-    const bannerGeo = new THREE.PlaneGeometry(0.2, 0.3);
-    const bannerColor = color;
-    const bannerMat = new THREE.MeshStandardMaterial({ color: bannerColor, side: THREE.DoubleSide });
-    const banner = new THREE.Mesh(bannerGeo, bannerMat);
-    banner.position.set(0, bodyH + 0.5, -0.25);
-    group.add(banner);
+    if (type === WarriorType.CAVALRY) {
+      // Horse body underneath rider
+      const horseGeo = new THREE.BoxGeometry(0.5, 0.6, 1.0);
+      const horseMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+      const horse = new THREE.Mesh(horseGeo, horseMat);
+      horse.position.set(0, 0.3, 0.1);
+      group.add(horse);
+      // Horse head
+      const hHeadGeo = new THREE.BoxGeometry(0.3, 0.25, 0.3);
+      const hHead = new THREE.Mesh(hHeadGeo, horseMat);
+      hHead.position.set(0, 0.5, 0.65);
+      group.add(hHead);
+      // Horse legs
+      const hLegGeo = new THREE.BoxGeometry(0.1, 0.3, 0.1);
+      for (const [lx, lz] of [[-0.2, -0.35], [0.2, -0.35], [-0.2, 0.35], [0.2, 0.35]]) {
+        const hLeg = new THREE.Mesh(hLegGeo, horseMat);
+        hLeg.position.set(lx, 0, lz + 0.1);
+        group.add(hLeg);
+      }
+    }
+
+    if (type === WarriorType.CATAPULT_OPERATOR) {
+      // Cart base
+      const cartGeo = new THREE.BoxGeometry(0.8, 0.2, 1.0);
+      const cartMat = new THREE.MeshStandardMaterial({ color: 0x5a4430 });
+      const cart = new THREE.Mesh(cartGeo, cartMat);
+      cart.position.set(0, 0.1, 0.2);
+      group.add(cart);
+      // Catapult arm
+      const armBeam = new THREE.BoxGeometry(0.08, 0.08, 0.8);
+      const beamMat = new THREE.MeshStandardMaterial({ color: 0x3b2f1e });
+      const beam = new THREE.Mesh(armBeam, beamMat);
+      beam.position.set(0, 0.5, 0.3);
+      beam.rotation.x = -0.4;
+      group.add(beam);
+    }
 
     if (type === WarriorType.CASTLE_BOSS) {
       group.scale.set(1.8, 1.8, 1.8);
-      
+      // Crown on head
+      const crownGeo = new THREE.BoxGeometry(0.4, 0.12, 0.4);
+      const crownMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: new THREE.Color(0xffd700), emissiveIntensity: 0.5, metalness: 0.8 });
+      const crown = new THREE.Mesh(crownGeo, crownMat);
+      crown.position.set(0, bodyH + 0.55, 0);
+      group.add(crown);
+      // Crown spikes
+      const spikeGeo = new THREE.BoxGeometry(0.06, 0.12, 0.06);
+      for (let i = -1; i <= 1; i++) {
+        const spike = new THREE.Mesh(spikeGeo, crownMat);
+        spike.position.set(i * 0.12, bodyH + 0.65, 0);
+        group.add(spike);
+      }
+      // Emissive glow body
+      bodyMat.emissive = new THREE.Color(color);
+      bodyMat.emissiveIntensity = 0.3;
       // Giant hammer/mace
       const maceGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.2, 8);
       const maceMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
       const mace = new THREE.Mesh(maceGeo, maceMat);
       mace.position.set(0.6, 0.8, 0);
       mace.rotation.z = Math.PI / 4;
-      
-      const headGeo = new THREE.DodecahedronGeometry(0.3);
-      const headMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-      const maceHead = new THREE.Mesh(headGeo, headMat);
+      const mHeadGeo = new THREE.DodecahedronGeometry(0.3);
+      const mHeadMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+      const maceHead = new THREE.Mesh(mHeadGeo, mHeadMat);
       maceHead.position.set(0, 0.6, 0);
       mace.add(maceHead);
-      
       group.add(mace);
     }
 
@@ -261,6 +374,9 @@ export class WarriorManager {
       // Target castle position
       const targetCastle = team.team === 'player' ? this.enemyCastlePos : this.playerCastlePos;
 
+      // Home castle position for retreat
+      const homeCastle = team.team === 'player' ? this.playerCastlePos : this.enemyCastlePos;
+
       // AI update
       const combatComp = warrior.getComponent<import('../ecs/Component').CombatComponent>('combat')!
       const wComp = warrior.getComponent<import('../ecs/Component').WarriorComponent>('warrior')!;
@@ -272,21 +388,44 @@ export class WarriorManager {
         nearestEnemyId: nearestEnemy?.id ?? null,
         nearestEnemyPos,
         isArcher: wComp.warriorType === WarriorType.ARCHER,
+        warriorType: wComp.warriorType,
         targetCastleX: targetCastle?.x,
         targetCastleZ: targetCastle?.z,
+        homeCastleX: homeCastle?.x,
+        homeCastleZ: homeCastle?.z,
       };
+
+      const prevState = ai.state;
       this.aiSM.update(dt, ctx);
 
+      // ── Battle sound effects (throttled to 1 per 2s per warrior) ──
+      const now = Date.now() / 1000;
+      const lastSound = this.lastSoundTime.get(warrior.id) ?? 0;
+      if (now - lastSound > 2) {
+        // State transition sounds
+        if (ai.state === AIState.CHASE && (prevState === AIState.IDLE || prevState === AIState.PATROL || prevState === AIState.MARCH || prevState === AIState.ALERT)) {
+          soundManager.playWarCry();
+          this.lastSoundTime.set(warrior.id, now);
+        } else if (ai.state === AIState.FLEE && prevState !== AIState.FLEE) {
+          soundManager.playPanic();
+          this.lastSoundTime.set(warrior.id, now);
+        } else if (ai.state === AIState.MARCH && wComp.warriorType === WarriorType.CAVALRY) {
+          soundManager.playCavalryCharge();
+          this.lastSoundTime.set(warrior.id, now);
+        }
+      }
+
       // Movement based on AI state
-      const speed = WARRIOR_STATS[warrior.getComponent<import('../ecs/Component').WarriorComponent>('warrior')!.warriorType]?.speed ?? 3;
+      const speed = WARRIOR_STATS[wComp.warriorType]?.speed ?? 3;
 
       if (ai.state === AIState.MARCH && targetCastle) {
-        this.moveToward(pos, warrior.id, targetCastle.x, targetCastle.z, speed, dt);
+        const fOffset = this.getFormationOffset(wComp, pos, targetCastle);
+        this.moveToward(pos, warrior.id, targetCastle.x + fOffset.x, targetCastle.z + fOffset.z, speed, dt);
       } else if (ai.state === AIState.CHASE && nearestEnemy) {
         const ePos = nearestEnemy.getComponent<PositionComponent>('position')!;
         this.moveToward(pos, warrior.id, ePos.x, ePos.z, speed, dt);
       } else if (ai.state === AIState.ATTACK && nearestEnemy) {
-        if (warrior.getComponent<import('../ecs/Component').WarriorComponent>('warrior')!.warriorType === WarriorType.ARCHER) {
+        if (wComp.warriorType === WarriorType.ARCHER) {
           const combatState = warrior.getComponent<import('../ecs/Component').CombatComponent>('combat')!;
           if (Date.now() / 1000 - combatState.lastAttackTime >= 1.5) { // 1.5s cooldown
             combatState.lastAttackTime = Date.now() / 1000;
@@ -303,23 +442,42 @@ export class WarriorManager {
             if (mesh) mesh.group.rotation.y = angle;
           }
         } else {
-          this.combat.meleeAttack(warrior.id, nearestEnemy.id);
+          if (this.combat.meleeAttack(warrior.id, nearestEnemy.id)) {
+            soundManager.playSwordSwing();
+          }
         }
       } else if (ai.state === AIState.PATROL && ai.patrolOrigin) {
         const angle = (Date.now() * 0.0003) % (Math.PI * 2);
         const tx = ai.patrolOrigin.x + Math.cos(angle) * ai.patrolRadius * 0.5;
         const tz = ai.patrolOrigin.z + Math.sin(angle) * ai.patrolRadius * 0.5;
         this.moveToward(pos, warrior.id, tx, tz, speed * 0.3, dt);
-      } else if ((ai.state === AIState.FLEE || ai.state === AIState.RETREAT) && nearestEnemy) {
-        // Move away from nearest enemy
+      } else if (ai.state === AIState.FLEE) {
+        // Retreat toward home castle
+        if (homeCastle) {
+          this.moveToward(pos, warrior.id, homeCastle.x, homeCastle.z, speed * 1.2, dt);
+          // Heal 1 HP/s when within 10 blocks of home castle
+          const distToHome = Math.sqrt((pos.x - homeCastle.x) ** 2 + (pos.z - homeCastle.z) ** 2);
+          if (distToHome < 10 && health.current < health.max) {
+            health.current = Math.min(health.max, health.current + dt);
+          }
+        } else if (nearestEnemy) {
+          // Fallback: run away
+          const ePos = nearestEnemy.getComponent<PositionComponent>('position')!;
+          const dx = pos.x - ePos.x, dz = pos.z - ePos.z;
+          const len = Math.sqrt(dx * dx + dz * dz) || 1;
+          this.moveToward(pos, warrior.id, pos.x + (dx / len) * 10, pos.z + (dz / len) * 10, speed * 1.2, dt);
+        }
+      } else if (ai.state === AIState.RETREAT && nearestEnemy) {
+        // Kite: move away from nearest enemy (archers/catapults maintaining range)
         const ePos = nearestEnemy.getComponent<PositionComponent>('position')!;
         const dx = pos.x - ePos.x;
         const dz = pos.z - ePos.z;
         const len = Math.sqrt(dx * dx + dz * dz) || 1;
-        const fleeX = pos.x + (dx / len) * 10;
-        const fleeZ = pos.z + (dz / len) * 10;
-        this.moveToward(pos, warrior.id, fleeX, fleeZ, speed * 1.2, dt);
+        this.moveToward(pos, warrior.id, pos.x + (dx / len) * 10, pos.z + (dz / len) * 10, speed * 1.2, dt);
       }
+
+      // Apply separation force (flocking) — push away from nearby same-team warriors
+      this.applySeparation(pos, warrior.id, team.team, dt);
 
       // Apply gravity to snap to terrain
       this.applyGravity(pos);
@@ -330,26 +488,95 @@ export class WarriorManager {
         mesh.group.position.set(pos.x, pos.y, pos.z);
 
         // Walk animation when moving
-        if (ai.state === AIState.MARCH || ai.state === AIState.CHASE) {
+        if (ai.state === AIState.MARCH || ai.state === AIState.CHASE || ai.state === AIState.FLEE || ai.state === AIState.RETREAT) {
           const walkCycle = Date.now() * 0.008;
           mesh.body.position.y = 0.55 + Math.sin(walkCycle) * 0.05;
-          // Arm swing (opposite phase)
           mesh.leftArm.rotation.x = Math.sin(walkCycle) * 0.6;
           mesh.rightArm.rotation.x = -Math.sin(walkCycle) * 0.6;
-          // Leg swing (opposite to arms)
           mesh.leftLeg.rotation.x = -Math.sin(walkCycle) * 0.5;
           mesh.rightLeg.rotation.x = Math.sin(walkCycle) * 0.5;
         } else if (ai.state === AIState.ATTACK) {
-          // Attack animation: weapon arm swings forward
-          const attackCycle = Date.now() * 0.012;
-          mesh.rightArm.rotation.x = Math.sin(attackCycle) * 1.0;
-          mesh.leftArm.rotation.x = 0;
+          // Per-type attack animations
+          const t = Date.now();
+          switch (wComp.warriorType) {
+            case WarriorType.SWORDSMAN: {
+              // Overhead slash: right arm sweeps -1.2 to 0.8
+              const cyc = (t * 0.012) % (Math.PI * 2);
+              mesh.rightArm.rotation.x = Math.sin(cyc) * 1.2;
+              mesh.leftArm.rotation.x = 0;
+              mesh.body.rotation.x = Math.sin(cyc) * 0.1; // lean forward
+              mesh.leftLeg.rotation.x = 0;
+              mesh.rightLeg.rotation.x = 0;
+              break;
+            }
+            case WarriorType.ARCHER: {
+              // Draw bow: left arm forward, right arm pull back, hold at peak
+              const cyc = (t * 0.006) % (Math.PI * 2);
+              const pull = Math.max(0, Math.sin(cyc)); // 0..1 pull
+              mesh.leftArm.rotation.x = -0.8; // holding bow forward
+              mesh.rightArm.rotation.x = -0.8 + pull * 1.2; // pull back
+              mesh.body.rotation.x = -0.05; // slight lean back
+              mesh.leftLeg.rotation.x = 0;
+              mesh.rightLeg.rotation.x = 0;
+              break;
+            }
+            case WarriorType.CAVALRY: {
+              // Lance thrust: both arms forward, body lunge
+              const cyc = (t * 0.01) % (Math.PI * 2);
+              mesh.rightArm.rotation.x = -0.8 + Math.sin(cyc) * 0.5;
+              mesh.leftArm.rotation.x = -0.8 + Math.sin(cyc) * 0.5;
+              mesh.body.rotation.x = Math.sin(cyc) * 0.15; // body lunge
+              mesh.leftLeg.rotation.x = -Math.sin(cyc) * 0.3;
+              mesh.rightLeg.rotation.x = Math.sin(cyc) * 0.3;
+              break;
+            }
+            case WarriorType.SHIELD_BEARER: {
+              // Shield bash + sword slash
+              const cyc = (t * 0.01) % (Math.PI * 2);
+              mesh.leftArm.rotation.x = Math.sin(cyc) * 0.8; // shield push
+              mesh.rightArm.rotation.x = Math.sin(cyc + Math.PI * 0.5) * 1.0; // offset slash
+              mesh.body.rotation.x = Math.sin(cyc) * 0.1;
+              mesh.leftLeg.rotation.x = 0;
+              mesh.rightLeg.rotation.x = 0;
+              break;
+            }
+            case WarriorType.CATAPULT_OPERATOR: {
+              // Slow windup: right arm circular sweep
+              const cyc = (t * 0.004) % (Math.PI * 2);
+              mesh.rightArm.rotation.x = Math.sin(cyc) * 1.5;
+              mesh.rightArm.rotation.z = Math.cos(cyc) * 0.3;
+              mesh.leftArm.rotation.x = 0;
+              mesh.body.rotation.x = 0;
+              mesh.leftLeg.rotation.x = 0;
+              mesh.rightLeg.rotation.x = 0;
+              break;
+            }
+            case WarriorType.CASTLE_BOSS: {
+              // Ground pound: both arms up then slam, body bounce
+              const cyc = (t * 0.008) % (Math.PI * 2);
+              const slam = Math.sin(cyc);
+              mesh.rightArm.rotation.x = slam * -1.5;
+              mesh.leftArm.rotation.x = slam * -1.5;
+              mesh.body.position.y = 0.55 + Math.abs(slam) * 0.1;
+              mesh.body.rotation.x = slam * 0.15;
+              mesh.leftLeg.rotation.x = -slam * 0.2;
+              mesh.rightLeg.rotation.x = slam * 0.2;
+              break;
+            }
+          }
+        } else if (ai.state === AIState.PATROL) {
+          // Slight idle sway
+          const breathe = Math.sin(Date.now() * 0.002) * 0.03;
+          mesh.leftArm.rotation.x = breathe;
+          mesh.rightArm.rotation.x = -breathe;
+          mesh.body.rotation.x = 0;
           mesh.leftLeg.rotation.x = 0;
           mesh.rightLeg.rotation.x = 0;
         } else {
           // Idle: reset limbs
           mesh.leftArm.rotation.x = 0;
           mesh.rightArm.rotation.x = 0;
+          mesh.body.rotation.x = 0;
           mesh.leftLeg.rotation.x = 0;
           mesh.rightLeg.rotation.x = 0;
         }
@@ -563,23 +790,136 @@ export class WarriorManager {
     pos.y += (gy - pos.y) * 0.25;
   }
 
+  /** Get next formation slot index for a team. */
+  private nextFormationSlot(team: string): number {
+    const current = this.formationSlotCounter.get(team) ?? 0;
+    this.formationSlotCounter.set(team, current + 1);
+    return current;
+  }
+
+  /** Calculate formation offset for march movement. */
+  private getFormationOffset(
+    wComp: import('../ecs/Component').WarriorComponent,
+    pos: PositionComponent,
+    target: { x: number; z: number },
+  ): { x: number; z: number } {
+    // Direction from warrior to target
+    const dx = target.x - pos.x;
+    const dz = target.z - pos.z;
+    const len = Math.sqrt(dx * dx + dz * dz) || 1;
+    // perpendicular vector (right)
+    const px = -dz / len;
+    const pz = dx / len;
+    // forward vector
+    const fx = dx / len;
+    const fz = dz / len;
+
+    // Lateral offset from formation slot (±1.5 blocks, alternating sides)
+    const slot = wComp.formationSlot;
+    const lateral = ((slot % 2 === 0 ? 1 : -1) * Math.ceil(slot / 2)) * 1.5;
+
+    // Depth offset based on warrior type (relative to march direction)
+    let depth = 0;
+    switch (wComp.warriorType) {
+      case WarriorType.SHIELD_BEARER: depth = 3; break;   // front row
+      case WarriorType.SWORDSMAN: depth = 0; break;        // middle
+      case WarriorType.ARCHER: depth = -4; break;          // back row
+      case WarriorType.CAVALRY: depth = 1; break;          // slightly forward, flanks handled by wider lateral
+      case WarriorType.CATAPULT_OPERATOR: depth = -6; break; // far back
+      case WarriorType.CASTLE_BOSS: depth = 2; break;      // front-ish
+    }
+
+    return {
+      x: px * lateral + fx * depth,
+      z: pz * lateral + fz * depth,
+    };
+  }
+
+  /** Apply boid-style separation force — push apart nearby same-team warriors. */
+  private applySeparation(pos: PositionComponent, entityId: string, team: string, dt: number): void {
+    const SEPARATION_RADIUS = 1.5;
+    const SEPARATION_FORCE = 2.0;
+    let pushX = 0, pushZ = 0;
+
+    const warriors = this.ecsWorld.query('position', 'health', 'team');
+    for (const other of warriors) {
+      if (other.id === entityId) continue;
+      const oTeam = other.getComponent<TeamComponent>('team')!;
+      if (oTeam.team !== team) continue;
+      const oHealth = other.getComponent<HealthComponent>('health')!;
+      if (oHealth.isDead) continue;
+      const oPos = other.getComponent<PositionComponent>('position')!;
+
+      const dx = pos.x - oPos.x;
+      const dz = pos.z - oPos.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < SEPARATION_RADIUS && dist > 0.01) {
+        const strength = (SEPARATION_RADIUS - dist) / SEPARATION_RADIUS;
+        pushX += (dx / dist) * strength;
+        pushZ += (dz / dist) * strength;
+      }
+    }
+
+    const pushLen = Math.sqrt(pushX * pushX + pushZ * pushZ);
+    if (pushLen > 0.01) {
+      const cap = SEPARATION_FORCE * dt;
+      const scale = Math.min(cap, pushLen) / pushLen;
+      pos.x += pushX * scale;
+      pos.z += pushZ * scale;
+    }
+  }
+
   private isSolidAt(x: number, y: number, z: number): boolean {
     const block = this.chunkManager.getBlockAtWorld(x, y, z);
     return block !== undefined && isBlockSolid(block);
   }
 
-  removeWarrior(entityId: string): void {
+  removeWarrior(entityId: string, killerPos?: { x: number; z: number }): void {
     const mesh = this.meshes.get(entityId);
     if (mesh) {
-      // Death animation: shrink + fade over 0.4s
+      // Death animation: knockback + tumble + fade over 0.6s
       const startTime = Date.now();
-      const duration = 400; // ms
+      const duration = 600; // ms
+
+      // Calculate knockback direction (away from killer)
+      let kbX = 0, kbZ = 0;
+      if (killerPos) {
+        const dx = mesh.group.position.x - killerPos.x;
+        const dz = mesh.group.position.z - killerPos.z;
+        const len = Math.sqrt(dx * dx + dz * dz) || 1;
+        kbX = (dx / len) * 3; // 3 blocks knockback
+        kbZ = (dz / len) * 3;
+      } else {
+        // Random direction if no killer info
+        const angle = Math.random() * Math.PI * 2;
+        kbX = Math.cos(angle) * 2;
+        kbZ = Math.sin(angle) * 2;
+      }
+
+      // Random tumble spin axes
+      const spinX = (Math.random() - 0.5) * 12;
+      const spinZ = (Math.random() - 0.5) * 12;
+      const startY = mesh.group.position.y;
+      const startX = mesh.group.position.x;
+      const startZ = mesh.group.position.z;
+
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const t = Math.min(1, elapsed / duration);
-        const scale = 1 - t;
+
+        // Parabolic arc: fly up then down
+        const arcY = startY + Math.sin(t * Math.PI) * 1.5 - t * 0.5;
+        mesh.group.position.x = startX + kbX * t;
+        mesh.group.position.y = arcY;
+        mesh.group.position.z = startZ + kbZ * t;
+
+        // Tumble rotation
+        mesh.group.rotation.x = spinX * t;
+        mesh.group.rotation.z = spinZ * t;
+
+        // Shrink + fade
+        const scale = Math.max(0, 1 - t * t);
         mesh.group.scale.setScalar(scale);
-        mesh.group.position.y -= 0.02; // sink slightly
         mesh.group.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             const mat = child.material as THREE.MeshStandardMaterial;
@@ -587,6 +927,7 @@ export class WarriorManager {
             mat.opacity = 1 - t;
           }
         });
+
         if (t < 1) {
           requestAnimationFrame(animate);
         } else {
@@ -652,7 +993,7 @@ export class WarriorManager {
       if (!mesh) {
         const colors = WARRIOR_COLORS[w.type] ?? { player: 0x888888, enemy: 0x888888 };
         const color = w.team === 'player' ? colors.player : colors.enemy;
-        this.createMesh(w.id, color, w.type as WarriorType);
+        this.createMesh(w.id, color, w.type as WarriorType, w.team as 'player' | 'enemy');
         mesh = this.meshes.get(w.id)!;
       }
 

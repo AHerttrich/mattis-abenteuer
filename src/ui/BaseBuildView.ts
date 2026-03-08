@@ -53,10 +53,10 @@ export class BaseBuildView {
   private selected: BuildingOption | null = null;
 
   // View transform
-  private viewX = 0;  // center of view in world coords
+  private viewX = 0;
   private viewZ = 0;
-  private cellSize = 14; // pixels per block
-  private minCellSize = 6;
+  private cellSize = 14;
+  private minCellSize = 4;
   private maxCellSize = 32;
 
   // Interaction
@@ -68,15 +68,22 @@ export class BaseBuildView {
   private panMouseX = 0;
   private panMouseZ = 0;
 
-  // Bound handlers (for cleanup)
+  // Rearrange mode
+  private rearrangeTarget: CastleBuilding | null = null;
+
+  // Tooltip
+  private tooltip: HTMLDivElement;
+
+  // Bound handlers
   private _onWheel: (e: WheelEvent) => void;
   private _onMouseMove: (e: MouseEvent) => void;
   private _onMouseDown: (e: MouseEvent) => void;
   private _onMouseUp: (e: MouseEvent) => void;
   private _onClick: (e: MouseEvent) => void;
+  private _onRightClick: (e: MouseEvent) => void;
   private _onKey: (e: KeyboardEvent) => void;
 
-  // Build callback — called when a building is placed, for placing 3D blocks
+  // Build callback
   private buildCallback: ((type: BuildingType, wx: number, wy: number, wz: number) => void) | null = null;
 
   constructor(castle: Castle, inventory: Inventory, _chunkManager: ChunkManager, hud: HUD) {
@@ -95,8 +102,19 @@ export class BaseBuildView {
 
     // ── Title bar ──────────────────────────────────────────────
     const titleBar = document.createElement('div');
-    titleBar.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-size:16px;letter-spacing:2px;z-index:2;';
-    titleBar.innerHTML = '🏰 <span style="color:#f1c40f;margin:0 8px;">BASE BUILDING</span> 🏰 &nbsp;&nbsp;<span style="color:#7f8c8d;font-size:12px;">Scroll=Zoom &nbsp; RightDrag=Pan &nbsp; Click=Place &nbsp; ESC=Close</span>';
+    titleBar.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-size:16px;letter-spacing:2px;z-index:2;gap:12px;';
+    titleBar.innerHTML = '🏰 <span style="color:#f1c40f;margin:0 8px;">BASE BUILDING</span> 🏰 &nbsp;<span style="color:#7f8c8d;font-size:11px;">Scroll=Zoom &nbsp;RightDrag=Pan &nbsp;Click=Place &nbsp;RightClick=Demolish &nbsp;ESC=Close</span>';
+    // Fit All button
+    const fitBtn = document.createElement('button');
+    fitBtn.style.cssText = 'background:#2040c0;color:#fff;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:11px;font-family:monospace;';
+    fitBtn.textContent = '⊞ Fit All';
+    fitBtn.addEventListener('click', () => this.fitAllZoom());
+    titleBar.appendChild(fitBtn);
+
+    // ── Tooltip ────────────────────────────────────────────────
+    this.tooltip = document.createElement('div');
+    this.tooltip.style.cssText = 'position:fixed;pointer-events:none;z-index:500;display:none;background:rgba(15,15,30,0.95);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-size:11px;color:#ddd;box-shadow:0 4px 16px rgba(0,0,0,0.6);max-width:200px;font-family:monospace;';
+    document.body.appendChild(this.tooltip);
     this.overlay.appendChild(titleBar);
 
     // ── Palette sidebar ────────────────────────────────────────
@@ -119,15 +137,16 @@ export class BaseBuildView {
     this._onMouseDown = (e) => { if (!this._visible || e.button !== 2) return; this.isPanning = true; this.panMouseX = e.clientX; this.panMouseZ = e.clientY; this.panStartX = this.viewX; this.panStartZ = this.viewZ; };
     this._onMouseUp = () => { this.isPanning = false; };
     this._onClick = (e) => this.handleClick(e);
-    this._onKey = (e) => { if (this._visible && e.key === 'Escape') this.close(); };
+    this._onRightClick = (e) => this.handleRightClick(e);
+    this._onKey = (e) => { if (this._visible && e.key === 'Escape') { if (this.rearrangeTarget) { this.rearrangeTarget = null; this.hud.showInfo('Rearrange cancelled'); this.render(); } else { this.close(); } } };
 
     this.canvas.addEventListener('wheel', this._onWheel, { passive: false });
     this.canvas.addEventListener('mousemove', this._onMouseMove);
     this.canvas.addEventListener('mousedown', this._onMouseDown);
     window.addEventListener('mouseup', this._onMouseUp);
     this.canvas.addEventListener('click', this._onClick);
+    this.canvas.addEventListener('contextmenu', this._onRightClick);
     window.addEventListener('keydown', this._onKey);
-    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   // ── Palette ────────────────────────────────────────────────
@@ -193,8 +212,10 @@ export class BaseBuildView {
     this.viewX = this.castle.x;
     this.viewZ = this.castle.z;
     this.selected = null;
+    this.rearrangeTarget = null;
     this.resizeCanvas();
     this.buildPalette();
+    this.fitAllZoom();
     this.render();
     document.exitPointerLock();
   }
@@ -203,11 +224,31 @@ export class BaseBuildView {
     this._visible = false;
     this.overlay.style.display = 'none';
     this.selected = null;
+    this.rearrangeTarget = null;
+    this.tooltip.style.display = 'none';
     const canvas = document.querySelector('canvas:not(#base-build-view canvas)') as HTMLCanvasElement | null;
     if (canvas) canvas.requestPointerLock();
   }
 
   get isVisible(): boolean { return this._visible; }
+
+  /** Auto-zoom to fit all buildings with padding. */
+  private fitAllZoom(): void {
+    const rect = this.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const bounds = this.castle.getBounds();
+    const worldW = bounds.maxX - bounds.minX;
+    const worldH = bounds.maxZ - bounds.minZ;
+    if (worldW <= 0 || worldH <= 0) return;
+    // Center camera
+    this.viewX = (bounds.minX + bounds.maxX) / 2;
+    this.viewZ = (bounds.minZ + bounds.maxZ) / 2;
+    // Calculate cell size to fit all + 20% padding
+    const cellW = (rect.width * 0.8) / worldW;
+    const cellH = (rect.height * 0.8) / worldH;
+    this.cellSize = Math.max(this.minCellSize, Math.min(this.maxCellSize, Math.floor(Math.min(cellW, cellH))));
+    this.render();
+  }
 
   /** Set a callback for when a building is placed (to create 3D blocks). */
   onBuild(cb: (type: BuildingType, wx: number, wy: number, wz: number) => void): void {
@@ -283,6 +324,26 @@ export class BaseBuildView {
       ctx.textBaseline = 'middle';
       ctx.fillText(TYPE_ICONS[this.selected.type] ?? '?', sx + pw / 2, sy + ph / 2);
     }
+
+    // Rearrange preview
+    if (this.rearrangeTarget && this.hoverGridX !== -1) {
+      const fp = BUILDING_FOOTPRINT[this.rearrangeTarget.type] ?? 5;
+      const half = Math.floor(fp / 2);
+      const sx = this.worldToScreenX(this.hoverGridX - half, W);
+      const sy = this.worldToScreenZ(this.hoverGridZ - half, H);
+      const pw = fp * cs;
+      const ph = fp * cs;
+      ctx.fillStyle = 'rgba(241,196,15,0.2)';
+      ctx.fillRect(sx, sy, pw, ph);
+      ctx.strokeStyle = '#f1c40f';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(sx, sy, pw, ph);
+      ctx.setLineDash([]);
+    }
+
+    // Compass
+    this.drawCompass(ctx, W, H);
   }
 
   private drawBuilding(ctx: CanvasRenderingContext2D, bld: CastleBuilding, W: number, H: number): void {
@@ -293,19 +354,22 @@ export class BaseBuildView {
     const sy = this.worldToScreenZ(bld.z - half, H);
     const pw = fp * cs;
     const ph = fp * cs;
+    const isRearranging = this.rearrangeTarget === bld;
 
     // Background
     const hpRatio = bld.hp / bld.maxHp;
     const baseColor = TYPE_COLORS[bld.type] ?? '#888';
     ctx.fillStyle = bld.hp <= 0 ? 'rgba(50,50,50,0.5)' : baseColor;
-    ctx.globalAlpha = bld.hp <= 0 ? 0.3 : 0.75;
+    ctx.globalAlpha = bld.hp <= 0 ? 0.3 : isRearranging ? 0.4 : 0.75;
     ctx.fillRect(sx + 1, sy + 1, pw - 2, ph - 2);
     ctx.globalAlpha = 1;
 
-    // Border
-    ctx.strokeStyle = bld.hp <= 0 ? '#333' : baseColor;
-    ctx.lineWidth = bld.type === BuildingType.THRONE_ROOM ? 3 : 1.5;
+    // Border (pulsing if being rearranged)
+    ctx.strokeStyle = isRearranging ? '#f1c40f' : (bld.hp <= 0 ? '#333' : baseColor);
+    ctx.lineWidth = isRearranging ? 3 : (bld.type === BuildingType.THRONE_ROOM ? 3 : 1.5);
+    if (isRearranging) ctx.setLineDash([4, 4]);
     ctx.strokeRect(sx + 1, sy + 1, pw - 2, ph - 2);
+    ctx.setLineDash([]);
 
     // Cracks if damaged
     if (hpRatio < 0.5 && bld.hp > 0) {
@@ -319,28 +383,28 @@ export class BaseBuildView {
     }
 
     // Icon
-    if (pw >= 12) {
-      const fontSize = Math.max(10, Math.min(24, fp * cs * 0.4));
+    if (pw >= 10) {
+      const fontSize = Math.max(8, Math.min(24, fp * cs * 0.4));
       ctx.font = `${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(TYPE_ICONS[bld.type] ?? '?', sx + pw / 2, sy + ph / 2 - (pw > 24 ? 6 : 0));
+      ctx.fillText(TYPE_ICONS[bld.type] ?? '?', sx + pw / 2, sy + ph / 2 - (pw > 20 ? 6 : 0));
     }
 
     // Label
-    if (pw >= 40) {
-      ctx.font = '9px monospace';
+    if (pw >= 30) {
+      ctx.font = `${Math.max(7, cs * 0.5)}px monospace`;
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
-      ctx.fillText(bld.type.toUpperCase(), sx + pw / 2, sy + ph / 2 + (fp > 3 ? 12 : 6));
+      ctx.fillText(bld.type.toUpperCase(), sx + pw / 2, sy + ph / 2 + (fp > 3 ? 10 : 5));
     }
 
     // HP bar
-    if (bld.hp > 0 && pw >= 12) {
-      const barW = pw - 6;
-      const barH = Math.max(3, cs * 0.25);
-      const barX = sx + 3;
-      const barY = sy + ph - barH - 2;
+    if (bld.hp > 0 && pw >= 10) {
+      const barW = pw - 4;
+      const barH = Math.max(2, cs * 0.2);
+      const barX = sx + 2;
+      const barY = sy + ph - barH - 1;
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(barX, barY, barW, barH);
       const hpColor = hpRatio > 0.5 ? '#2ecc71' : hpRatio > 0.25 ? '#f1c40f' : '#e74c3c';
@@ -357,6 +421,18 @@ export class BaseBuildView {
       ctx.moveTo(sx + pw - 4, sy + 4); ctx.lineTo(sx + 4, sy + ph - 4);
       ctx.stroke();
     }
+  }
+
+  /** Draw compass labels at edges. */
+  private drawCompass(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+    ctx.font = '12px monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', W / 2, 12);
+    ctx.fillText('S', W / 2, H - 8);
+    ctx.fillText('W', 12, H / 2);
+    ctx.fillText('E', W - 12, H / 2);
   }
 
   // ── Coordinate transforms ──────────────────────────────
@@ -393,37 +469,105 @@ export class BaseBuildView {
 
     this.hoverGridX = Math.floor(this.screenToWorldX(mx, W));
     this.hoverGridZ = Math.floor(this.screenToWorldZ(my, H));
+
+    // Building tooltip
+    const hoveredBld = this.castle.getBuildingAt(this.hoverGridX, this.hoverGridZ);
+    if (hoveredBld && !this.selected && !this.rearrangeTarget) {
+      const spawns = hoveredBld.spawnsUnits ? hoveredBld.spawnsUnits.join(', ') : 'none';
+      const hpPct = Math.round((hoveredBld.hp / hoveredBld.maxHp) * 100);
+      this.tooltip.innerHTML = `<div style="font-weight:bold;color:${TYPE_COLORS[hoveredBld.type] ?? '#fff'};margin-bottom:4px;">${TYPE_ICONS[hoveredBld.type] ?? ''} ${hoveredBld.type.toUpperCase()}</div>`
+        + `<div>HP: ${hoveredBld.hp}/${hoveredBld.maxHp} (${hpPct}%)</div>`
+        + `<div style="color:#7f8c8d;">Spawns: ${spawns}</div>`
+        + `<div style="color:#555;font-size:10px;margin-top:4px;">Click to rearrange · Right-click to demolish</div>`;
+      this.tooltip.style.display = 'block';
+      this.tooltip.style.left = (e.clientX + 14) + 'px';
+      this.tooltip.style.top = (e.clientY - 10) + 'px';
+    } else {
+      this.tooltip.style.display = 'none';
+    }
+
     this.render();
   }
 
   private handleClick(e: MouseEvent): void {
-    if (!this._visible || !this.selected || e.button !== 0) return;
+    if (!this._visible || e.button !== 0) return;
     const rect = this.canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
     const wx = Math.floor(this.screenToWorldX(mx, rect.width));
     const wz = Math.floor(this.screenToWorldZ(my, rect.height));
 
-    // Validate
-    const existing = this.castle.getBuildingAt(wx, wz);
-    if (existing) { this.hud.showInfo('❌ Space already occupied!', 1500); return; }
+    // Rearrange mode: drop building at new location
+    if (this.rearrangeTarget) {
+      const existing = this.castle.getBuildingAt(wx, wz);
+      if (existing && existing !== this.rearrangeTarget) { this.hud.showInfo('❌ Space occupied!', 1500); return; }
+      this.rearrangeTarget.x = wx;
+      this.rearrangeTarget.z = wz;
+      this.hud.showInfo(`📦 ${this.rearrangeTarget.type} moved!`, 1500);
+      this.rearrangeTarget = null;
+      this.render();
+      return;
+    }
+
+    // Click existing building to enter rearrange mode
+    if (!this.selected) {
+      const clickedBld = this.castle.getBuildingAt(wx, wz);
+      if (clickedBld && clickedBld.type !== BuildingType.THRONE_ROOM) {
+        this.rearrangeTarget = clickedBld;
+        this.hud.showInfo(`📦 ${clickedBld.type} selected — click to move, ESC to cancel`, 3000);
+        this.render();
+        return;
+      }
+      return;
+    }
+
+    // Place new building
+    const existingAtPlace = this.castle.getBuildingAt(wx, wz);
+    if (existingAtPlace) { this.hud.showInfo('❌ Space already occupied!', 1500); return; }
     if (!this.checkCost(this.selected.cost)) { this.hud.showInfo('❌ Not enough materials!', 1500); return; }
 
-    // Deduct materials
     for (const req of this.selected.cost) {
       this.inventory.removeItem(req.itemId, req.count);
     }
 
-    // Place building in castle data
     this.castle.addBuilding(this.selected.type, wx, this.castle.y, wz);
     this.hud.showInfo(`🏗️ ${this.selected.label} placed!`, 1500);
 
-    // Place 3D blocks via callback
     if (this.buildCallback) {
       this.buildCallback(this.selected.type, wx, this.castle.y, wz);
     }
 
-    // Refresh palette (costs may have changed)
+    this.buildPalette();
+    this.render();
+  }
+
+  /** Right-click to demolish a building (50% material refund). */
+  private handleRightClick(e: MouseEvent): void {
+    e.preventDefault();
+    if (!this._visible) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const wx = Math.floor(this.screenToWorldX(mx, rect.width));
+    const wz = Math.floor(this.screenToWorldZ(my, rect.height));
+
+    const bld = this.castle.getBuildingAt(wx, wz);
+    if (!bld || bld.type === BuildingType.THRONE_ROOM) return;
+
+    // Find cost from BUILDING_OPTIONS
+    const opt = BUILDING_OPTIONS.find(o => o.type === bld.type);
+    if (opt) {
+      // Refund 50%
+      for (const req of opt.cost) {
+        const refund = Math.floor(req.count * 0.5);
+        if (refund > 0) this.inventory.addItem(req.itemId, refund);
+      }
+    }
+
+    // Remove building
+    const idx = this.castle.buildings.indexOf(bld);
+    if (idx >= 0) this.castle.buildings.splice(idx, 1);
+    this.hud.showInfo(`🗑️ ${bld.type} demolished (50% refunded)`, 2000);
     this.buildPalette();
     this.render();
   }
