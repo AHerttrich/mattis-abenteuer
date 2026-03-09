@@ -106,14 +106,7 @@ make ci        # Run full CI locally (lint + test + build)
 9. **Siege** — Send your army and catapults to destroy the enemy fortress
 10. **Win** — Reduce the enemy castle to rubble!
 
-## 🔗 Related Projects
 
-| Project | Description |
-|---|---|
-| [Genesis](https://github.com/AHerttrich/genesis) | Migration engine for enterprise platform transformations |
-| [Nexus](https://github.com/AHerttrich/nexus) | AI-powered ITSM platform |
-| [Forge](https://github.com/AHerttrich/forge) | Sovereign agentic IDE |
-| [AI Gov HQ](https://github.com/AHerttrich/ai-gov-hq) | AI governance dashboard |
 
 ## 📄 License
 
