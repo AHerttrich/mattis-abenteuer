@@ -39,7 +39,8 @@ export class ChunkManager {
     for (let dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
       for (let dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
         if (dx * dx + dz * dz > RENDER_DISTANCE * RENDER_DISTANCE) continue;
-        const cx = pcx + dx, cz = pcz + dz;
+        const cx = pcx + dx,
+          cz = pcz + dz;
         const key = Chunk.makeKey(cx, cz);
         if (!this.chunks.has(key)) {
           const chunk = new Chunk(cx, cz);
@@ -53,7 +54,8 @@ export class ChunkManager {
 
     // Unload distant chunks
     for (const [key, chunk] of this.chunks) {
-      const dx = chunk.cx - pcx, dz = chunk.cz - pcz;
+      const dx = chunk.cx - pcx,
+        dz = chunk.cz - pcz;
       if (dx * dx + dz * dz > (RENDER_DISTANCE + 2) * (RENDER_DISTANCE + 2)) {
         this.removeMesh(key);
         this.chunks.delete(key);
@@ -94,7 +96,8 @@ export class ChunkManager {
   }
 
   getBlockAtWorld(wx: number, wy: number, wz: number): number {
-    const cx = Math.floor(wx / CHUNK_SIZE), cz = Math.floor(wz / CHUNK_SIZE);
+    const cx = Math.floor(wx / CHUNK_SIZE),
+      cz = Math.floor(wz / CHUNK_SIZE);
     const chunk = this.chunks.get(Chunk.makeKey(cx, cz));
     if (!chunk) return 0;
     return chunk.getBlock(
@@ -105,7 +108,8 @@ export class ChunkManager {
   }
 
   setBlockAtWorld(wx: number, wy: number, wz: number, type: number): void {
-    const cx = Math.floor(wx / CHUNK_SIZE), cz = Math.floor(wz / CHUNK_SIZE);
+    const cx = Math.floor(wx / CHUNK_SIZE),
+      cz = Math.floor(wz / CHUNK_SIZE);
     const chunk = this.chunks.get(Chunk.makeKey(cx, cz));
     if (!chunk) return;
     const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
@@ -123,10 +127,14 @@ export class ChunkManager {
     if (c) c.dirty = true;
   }
 
-  get loadedChunkCount(): number { return this.chunks.size; }
+  get loadedChunkCount(): number {
+    return this.chunks.size;
+  }
 
   /** Get all active meshes (for uniform updates like wind). */
-  get activeMeshes(): IterableIterator<THREE.Mesh> { return this.meshes.values(); }
+  get activeMeshes(): IterableIterator<THREE.Mesh> {
+    return this.meshes.values();
+  }
 
   /** Replace the world generator (for multiplayer seed sync). Clears all chunks. */
   replaceGenerator(generator: WorldGenerator): void {

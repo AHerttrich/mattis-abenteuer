@@ -53,6 +53,10 @@ Most voxel survival games lack a clear objective and strategic depth. Players bu
 | FR-29 | Potion brewing & effects | Could | ✅ Done — 6 potions: healing, speed, strength, resistance, night vision, fire resist |
 | FR-30 | Rideable mounts | Could | ✅ Done — Horses near villages, R-key mount/dismount, 2.5× speed |
 | FR-31 | Biome-based ambient sounds | Could | ✅ Done — 7 biome sounds via Web Audio synthesis |
+| FR-32 | Visual rendering pipeline (bloom, AO, fog, animated textures) | Could | ✅ Done — Post-processing, per-vertex AO, height fog, animated lava, underwater tint, dynamic crosshair |
+| FR-33 | Weather particles per biome | Could | ✅ Done — Rain in swamp/forest, snow in tundra with smooth transitions |
+| FR-34 | Fighter visual identity (pennants, body shapes, team colors) | Could | ✅ Done — Team flags, per-type bodies, shoulder plates, eye dots, crown/horse/quiver |
+| FR-35 | Type-specific castle building 3D structures | Could | ✅ Done — Barracks (beds, weapons), archery (open-air, targets), stable (fence, hay), siege (iron, anvil) |
 
 ## Non-Functional Requirements
 
@@ -133,6 +137,16 @@ Most voxel survival games lack a clear objective and strategic depth. Players bu
 - Mount system (rideable horses, 2.5× speed)
 - Ambient sound system (7 biome-based sounds)
 
+### Phase 8: Visual Polish 🎨✨
+- Post-processing pipeline (bloom, ACES tone mapping, height-based fog)
+- Per-vertex ambient occlusion and biome color variation
+- Animated textures (lava flow) and emissive glowing blocks
+- Weather system (per-biome rain/snow particles)
+- Fighter visual identity (team pennant flags, per-type body shapes, shoulder plates)
+- Castle building visuals (type-specific 3D structures with banners and torches)
+- Base builder UI polish (fit-all zoom, rearrange, demolish, tooltips, compass)
+- Enhanced start screen, dynamic crosshair, underwater tint, warrior walk animations
+
 ## Implementation Status
 
 | Phase | Progress | Notes |
@@ -144,4 +158,5 @@ Most voxel survival games lack a clear objective and strategic depth. Players bu
 | Phase 5: Villages & NPCs | 🟢 100% | NPC trading, base building view, inventory UX overhaul |
 | Phase 6: Combat & Balance | 🟢 100% | Waves, cave mobs, weather, combat polish |
 | Phase 7: Full Feature Expansion | 🟢 100% | XP, farming, quests, achievements, enchanting, potions, mounts, ambient |
+| Phase 8: Visual Polish | 🟢 100% | Post-processing, weather, fighter identity, castle visuals, base builder UI |
 

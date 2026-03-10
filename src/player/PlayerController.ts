@@ -5,10 +5,22 @@
 import * as THREE from 'three';
 import { InputManager } from '../engine/InputManager';
 import {
-  PLAYER_SPEED, PLAYER_SPRINT_SPEED, PLAYER_EYE_HEIGHT, GRAVITY, JUMP_FORCE,
-  TERMINAL_VELOCITY, PLAYER_HEIGHT, PLAYER_WIDTH, FOV,
-  HEAD_BOB_SPEED, HEAD_BOB_AMOUNT, HEAD_BOB_SWAY, SPRINT_FOV_BOOST,
-  ACCELERATION_TIME, LANDING_DIP_AMOUNT, LANDING_DIP_RECOVERY,
+  PLAYER_SPEED,
+  PLAYER_SPRINT_SPEED,
+  PLAYER_EYE_HEIGHT,
+  GRAVITY,
+  JUMP_FORCE,
+  TERMINAL_VELOCITY,
+  PLAYER_HEIGHT,
+  PLAYER_WIDTH,
+  FOV,
+  HEAD_BOB_SPEED,
+  HEAD_BOB_AMOUNT,
+  HEAD_BOB_SWAY,
+  SPRINT_FOV_BOOST,
+  ACCELERATION_TIME,
+  LANDING_DIP_AMOUNT,
+  LANDING_DIP_RECOVERY,
 } from '../utils/constants';
 import { eventBus } from '../utils';
 import type { ChunkManager } from '../world/ChunkManager';
@@ -20,23 +32,25 @@ export class PlayerController {
   private chunkManager: ChunkManager;
 
   // Position & physics
-  x = 0; y = 40; z = 0;
+  x = 0;
+  y = 40;
+  z = 0;
   velocityY = 0;
-  yaw = 0;   // left-right rotation
+  yaw = 0; // left-right rotation
   pitch = 0; // up-down rotation
   isGrounded = false;
 
   // Fall damage tracking
-  private highestY = 0;        // highest Y while airborne
-  private lastFallDamage = 0;  // damage from last fall (read by main.ts)
+  private highestY = 0; // highest Y while airborne
+  private lastFallDamage = 0; // damage from last fall (read by main.ts)
 
   // Movement feel
-  private moveSpeed = 0;             // current speed (ramps up)
-  private bobPhase = 0;              // head bob oscillation phase
-  private landingDip = 0;            // landing camera dip offset
-  private currentFov: number;        // current FOV (lerped for sprint)
+  private moveSpeed = 0; // current speed (ramps up)
+  private bobPhase = 0; // head bob oscillation phase
+  private landingDip = 0; // landing camera dip offset
+  private currentFov: number; // current FOV (lerped for sprint)
   private isSprinting = false;
-  private wasGrounded = true;        // for landing detection
+  private wasGrounded = true; // for landing detection
 
   private readonly mouseSensitivity = 0.002;
 
@@ -64,7 +78,7 @@ export class PlayerController {
     if (this.input.isPointerLocked) {
       this.handleMouse();
     }
-    
+
     // Auto-unstick: if stuck inside terrain, push up until free.
     if (this.collidesAt(this.x, this.y, this.z)) {
       this.y += 20 * dt; // Float up at 20 units/sec
@@ -101,7 +115,10 @@ export class PlayerController {
 
     // Acceleration ramp-up/down
     if (isMoving) {
-      this.moveSpeed = Math.min(targetSpeed, this.moveSpeed + targetSpeed * (dt / ACCELERATION_TIME));
+      this.moveSpeed = Math.min(
+        targetSpeed,
+        this.moveSpeed + targetSpeed * (dt / ACCELERATION_TIME),
+      );
     } else {
       this.moveSpeed = Math.max(0, this.moveSpeed - targetSpeed * (dt / ACCELERATION_TIME) * 3); // decelerate faster
     }
@@ -181,13 +198,19 @@ export class PlayerController {
   collidesAt(px: number, py: number, pz: number): boolean {
     const hw = PLAYER_WIDTH / 2;
     const offsets = [
-      [px - hw, py, pz - hw], [px + hw, py, pz - hw],
-      [px - hw, py, pz + hw], [px + hw, py, pz + hw],
-      [px - hw, py + PLAYER_HEIGHT, pz - hw], [px + hw, py + PLAYER_HEIGHT, pz - hw],
-      [px - hw, py + PLAYER_HEIGHT, pz + hw], [px + hw, py + PLAYER_HEIGHT, pz + hw],
+      [px - hw, py, pz - hw],
+      [px + hw, py, pz - hw],
+      [px - hw, py, pz + hw],
+      [px + hw, py, pz + hw],
+      [px - hw, py + PLAYER_HEIGHT, pz - hw],
+      [px + hw, py + PLAYER_HEIGHT, pz - hw],
+      [px - hw, py + PLAYER_HEIGHT, pz + hw],
+      [px + hw, py + PLAYER_HEIGHT, pz + hw],
     ];
     for (const [ox, oy, oz] of offsets) {
-      const bx = Math.floor(ox), by = Math.floor(oy), bz = Math.floor(oz);
+      const bx = Math.floor(ox),
+        by = Math.floor(oy),
+        bz = Math.floor(oz);
       const block = this.chunkManager.getBlockAtWorld(bx, by, bz);
       if (isBlockSolid(block as number)) return true;
     }

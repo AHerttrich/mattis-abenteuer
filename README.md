@@ -11,9 +11,12 @@
 | **Voxel World** | Procedurally generated 3D world with 6 diverse biomes and 80+ block types |
 | **Survival & Crafting** | 50+ items, 30+ recipes, hunger system, tools & weapons |
 | **Castle Building** | Build your fortress — structures determine which warriors spawn |
-| **Base Building View** | 2D map overview of your base with drag-to-rearrange, demolish, tooltips |
+| **Base Building View** | 2D map of your base — fit-all zoom, drag-to-rearrange, demolish (50% refund), tooltips, compass |
 | **Army Management** | Warriors auto-spawn, march, and siege the enemy castle |
+| **Fighter Identity** | Team pennant flags, per-type body shapes (quiver, horse, cart, crown), shoulder plates, eye dots |
+| **Castle Visuals** | Type-specific 3D buildings (barracks with beds, open-air archery, fenced stable, iron siege workshop) |
 | **Castle Warfare** | Siege with catapults, boulders, and full army AI |
+| **Visual Pipeline** | Bloom, ACES tone mapping, per-vertex AO, height fog, animated lava, weather (rain/snow), underwater tint, dynamic crosshair |
 | **Villages & NPCs** | Discover villages with villagers — trade, recruit warriors, buy rare items |
 | **Farming** | Plant wheat/carrot/potato/pumpkin, grow crops, harvest food |
 | **XP & Leveling** | Gain XP from kills, mining, crafting, quests → level up → stat bonuses |

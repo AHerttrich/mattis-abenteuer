@@ -5,8 +5,8 @@
 import { eventBus, Events } from '../utils';
 
 export class HungerSystem {
-  hunger = 20;      // 0-20 (like Minecraft)
-  saturation = 5;   // Hidden buffer that depletes before hunger
+  hunger = 20; // 0-20 (like Minecraft)
+  saturation = 5; // Hidden buffer that depletes before hunger
   maxHunger = 20;
   private exhaustion = 0;
   private exhaustionThreshold = 4.0;
@@ -41,16 +41,24 @@ export class HungerSystem {
   }
 
   /** Can the player sprint? (hunger > 4) */
-  get canSprint(): boolean { return this.hunger > 4; }
+  get canSprint(): boolean {
+    return this.hunger > 4;
+  }
 
   /** Can the player regenerate health? (hunger >= 14) */
-  get canHeal(): boolean { return this.hunger >= 14; }
+  get canHeal(): boolean {
+    return this.hunger >= 14;
+  }
 
   /** Is the player starving? (hunger === 0) */
-  get isStarving(): boolean { return this.hunger <= 0; }
+  get isStarving(): boolean {
+    return this.hunger <= 0;
+  }
 
   /** Get hunger percentage (0-1). */
-  get percentage(): number { return this.hunger / this.maxHunger; }
+  get percentage(): number {
+    return this.hunger / this.maxHunger;
+  }
 
   /** Serialize for save. */
   serialize(): { hunger: number; saturation: number } {

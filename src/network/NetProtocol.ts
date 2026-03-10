@@ -24,14 +24,19 @@ export enum NetMsgKind {
 
 export interface PlayerMoveMsg {
   kind: NetMsgKind.PLAYER_MOVE;
-  x: number; y: number; z: number;
-  yaw: number; pitch: number;
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  pitch: number;
   t: number; // timestamp
 }
 
 export interface BlockChangeMsg {
   kind: NetMsgKind.BLOCK_CHANGE;
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   blockType: BlockType;
 }
 
@@ -48,7 +53,9 @@ export interface WarriorSpawnMsg {
   kind: NetMsgKind.WARRIOR_SPAWN;
   warriorType: string;
   team: 'player' | 'enemy';
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   sourceCastleId: string;
   targetCastleId: string;
 }
@@ -82,7 +89,9 @@ export interface WarriorNetState {
   id: string;
   type: string; // WarriorType
   team: 'player' | 'enemy';
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   rotY: number;
   hp: number;
   maxHp: number;

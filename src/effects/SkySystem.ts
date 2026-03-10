@@ -91,7 +91,11 @@ export class SkySystem {
     }
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, sizeAttenuation: false });
+    const starMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 1.5,
+      sizeAttenuation: false,
+    });
     this.starField = new THREE.Points(starGeo, starMat);
     this.starField.visible = false;
     scene.add(this.starField);

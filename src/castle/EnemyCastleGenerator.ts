@@ -30,7 +30,11 @@ export class EnemyCastleGenerator {
   generateCastle(): EnemyCastleResult {
     // Choose random angle using noise
     const angle = (this.noise.noise2D(1.5, 2.5) + 1) * Math.PI;
-    const dist = ENEMY_CASTLE_MIN_DISTANCE + (this.noise.noise2D(3.5, 4.5) + 1) * 0.5 * (ENEMY_CASTLE_MAX_DISTANCE - ENEMY_CASTLE_MIN_DISTANCE);
+    const dist =
+      ENEMY_CASTLE_MIN_DISTANCE +
+      (this.noise.noise2D(3.5, 4.5) + 1) *
+        0.5 *
+        (ENEMY_CASTLE_MAX_DISTANCE - ENEMY_CASTLE_MIN_DISTANCE);
 
     const cx = Math.floor(Math.cos(angle) * dist);
     const cz = Math.floor(Math.sin(angle) * dist);
@@ -62,7 +66,8 @@ export class EnemyCastleGenerator {
     }
 
     // Gate
-    const gx = cx + 20, gz = cz;
+    const gx = cx + 20,
+      gz = cz;
     const gy = this.worldGen.getHeightAtWorld(gx, gz) + 1;
     castle.addBuilding(BuildingType.GATE, gx, gy, gz);
 
@@ -78,12 +83,15 @@ export class EnemyCastleGenerator {
 
   /** Place castle blocks into the world (call once chunks are loaded). */
   placeBlocks(chunkManager: ChunkManager, castle: Castle): void {
-    const cx = castle.x, cz = castle.z, cy = castle.y;
+    const cx = castle.x,
+      cz = castle.z,
+      cy = castle.y;
 
     // Clear and flatten the area
     for (let dx = -25; dx <= 25; dx++) {
       for (let dz = -25; dz <= 25; dz++) {
-        const wx = cx + dx, wz = cz + dz;
+        const wx = cx + dx,
+          wz = cz + dz;
         // Place floor
         chunkManager.setBlockAtWorld(wx, cy - 1, wz, BlockType.CASTLE_FLOOR);
         // Clear above
@@ -183,7 +191,12 @@ export class EnemyCastleGenerator {
         cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
         for (let dy = 1; dy < 5; dy++) {
           const isWall = Math.abs(dx) === 3 || Math.abs(dz) === 3;
-          cm.setBlockAtWorld(x + dx, y + dy, z + dz, isWall ? BlockType.CASTLE_WALL : BlockType.AIR);
+          cm.setBlockAtWorld(
+            x + dx,
+            y + dy,
+            z + dz,
+            isWall ? BlockType.CASTLE_WALL : BlockType.AIR,
+          );
         }
         cm.setBlockAtWorld(x + dx, y + 5, z + dz, BlockType.CASTLE_WALL);
       }
@@ -198,7 +211,13 @@ export class EnemyCastleGenerator {
     cm.setBlockAtWorld(x - 2, y + 3, z - 2, BlockType.TORCH);
   }
 
-  private placeBuilding(cm: ChunkManager, x: number, y: number, z: number, type: BuildingType): void {
+  private placeBuilding(
+    cm: ChunkManager,
+    x: number,
+    y: number,
+    z: number,
+    type: BuildingType,
+  ): void {
     switch (type) {
       case BuildingType.BARRACKS:
         this.placeBarracks(cm, x, y, z);
@@ -223,7 +242,12 @@ export class EnemyCastleGenerator {
         cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
         for (let dy = 1; dy < 4; dy++) {
           const isWall = Math.abs(dx) === 2 || Math.abs(dz) === 2;
-          cm.setBlockAtWorld(x + dx, y + dy, z + dz, isWall ? BlockType.STONE_BRICK : BlockType.AIR);
+          cm.setBlockAtWorld(
+            x + dx,
+            y + dy,
+            z + dz,
+            isWall ? BlockType.STONE_BRICK : BlockType.AIR,
+          );
         }
         cm.setBlockAtWorld(x + dx, y + 4, z + dz, BlockType.PLANKS_DARK);
       }
@@ -240,7 +264,12 @@ export class EnemyCastleGenerator {
         cm.setBlockAtWorld(x + dx, y, z + dz, BlockType.CASTLE_FLOOR);
         for (let dy = 1; dy < 4; dy++) {
           const isWall = Math.abs(dx) === 2 || Math.abs(dz) === 2;
-          cm.setBlockAtWorld(x + dx, y + dy, z + dz, isWall ? BlockType.STONE_BRICK : BlockType.AIR);
+          cm.setBlockAtWorld(
+            x + dx,
+            y + dy,
+            z + dz,
+            isWall ? BlockType.STONE_BRICK : BlockType.AIR,
+          );
         }
         cm.setBlockAtWorld(x + dx, y + 4, z + dz, BlockType.PLANKS_DARK);
       }
@@ -324,7 +353,9 @@ export class EnemyCastleGenerator {
           const isWall = Math.abs(dx) === 2 || Math.abs(dz) === 2;
           // Alternate stone/iron on walls
           const blockType = isWall
-            ? (dy === 2 && (dx + dz) % 2 === 0 ? BlockType.IRON_BLOCK : BlockType.STONE_BRICK)
+            ? dy === 2 && (dx + dz) % 2 === 0
+              ? BlockType.IRON_BLOCK
+              : BlockType.STONE_BRICK
             : BlockType.AIR;
           cm.setBlockAtWorld(x + dx, y + dy, z + dz, blockType);
         }

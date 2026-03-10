@@ -25,7 +25,8 @@ export class CraftingUI {
 
     this.overlay = document.createElement('div');
     this.overlay.id = 'crafting-ui';
-    this.overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:300;display:none;font-family:monospace;color:#fff;';
+    this.overlay.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:300;display:none;font-family:monospace;color:#fff;';
 
     // Title
     const title = document.createElement('h1');
@@ -35,13 +36,15 @@ export class CraftingUI {
 
     // Station tabs
     this.stationTabs = document.createElement('div');
-    this.stationTabs.style.cssText = 'display:flex;justify-content:center;gap:8px;padding:0 20px 15px;';
+    this.stationTabs.style.cssText =
+      'display:flex;justify-content:center;gap:8px;padding:0 20px 15px;';
     this.createStationTabs();
     this.overlay.appendChild(this.stationTabs);
 
     // Recipe list
     this.recipeList = document.createElement('div');
-    this.recipeList.style.cssText = 'max-height:60vh;overflow-y:auto;padding:0 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;';
+    this.recipeList.style.cssText =
+      'max-height:60vh;overflow-y:auto;padding:0 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;';
     this.overlay.appendChild(this.recipeList);
 
     // Close hint
@@ -66,11 +69,22 @@ export class CraftingUI {
     for (const s of stations) {
       const tab = document.createElement('button');
       tab.dataset.station = s.station;
-      tab.style.cssText = 'background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:14px;transition:all 0.2s;pointer-events:auto;';
+      tab.style.cssText =
+        'background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:14px;transition:all 0.2s;pointer-events:auto;';
       tab.textContent = `${s.icon} ${s.label}`;
-      tab.addEventListener('click', () => { this.activeStation = s.station; this.refresh(); });
-      tab.addEventListener('mouseenter', () => { tab.style.background = 'rgba(255,255,255,0.2)'; });
-      tab.addEventListener('mouseleave', () => { tab.style.background = tab.dataset.station === this.activeStation ? 'rgba(241,196,15,0.3)' : 'rgba(255,255,255,0.1)'; });
+      tab.addEventListener('click', () => {
+        this.activeStation = s.station;
+        this.refresh();
+      });
+      tab.addEventListener('mouseenter', () => {
+        tab.style.background = 'rgba(255,255,255,0.2)';
+      });
+      tab.addEventListener('mouseleave', () => {
+        tab.style.background =
+          tab.dataset.station === this.activeStation
+            ? 'rgba(241,196,15,0.3)'
+            : 'rgba(255,255,255,0.1)';
+      });
       this.stationTabs.appendChild(tab);
     }
   }
@@ -80,7 +94,9 @@ export class CraftingUI {
     const tabs = this.stationTabs.querySelectorAll('button');
     tabs.forEach((tab) => {
       const isActive = (tab as HTMLButtonElement).dataset.station === this.activeStation;
-      (tab as HTMLElement).style.background = isActive ? 'rgba(241,196,15,0.3)' : 'rgba(255,255,255,0.1)';
+      (tab as HTMLElement).style.background = isActive
+        ? 'rgba(241,196,15,0.3)'
+        : 'rgba(255,255,255,0.1)';
       (tab as HTMLElement).style.borderColor = isActive ? '#f1c40f' : 'rgba(255,255,255,0.2)';
     });
 
@@ -103,13 +119,15 @@ export class CraftingUI {
       // Ingredients with icons
       const ings = document.createElement('div');
       ings.style.cssText = 'font-size:12px;color:#bdc3c7;margin-bottom:6px;';
-      ings.innerHTML = recipe.ingredients.map((i) => {
-        const def = getItemDef(i.itemId);
-        const have = this.inventory.countItem(i.itemId);
-        const color = have >= i.count ? '#2ecc71' : '#e74c3c';
-        const icon = getItemIcon(i.itemId);
-        return `<span style="color:${color}">${icon} ${def?.name ?? i.itemId} ×${i.count} (${have})</span>`;
-      }).join(' + ');
+      ings.innerHTML = recipe.ingredients
+        .map((i) => {
+          const def = getItemDef(i.itemId);
+          const have = this.inventory.countItem(i.itemId);
+          const color = have >= i.count ? '#2ecc71' : '#e74c3c';
+          const icon = getItemIcon(i.itemId);
+          return `<span style="color:${color}">${icon} ${def?.name ?? i.itemId} ×${i.count} (${have})</span>`;
+        })
+        .join(' + ');
       card.appendChild(ings);
 
       // Result with icon
@@ -125,14 +143,19 @@ export class CraftingUI {
           if (this.onCraft) this.onCraft(recipe);
           this.refresh();
         });
-        card.addEventListener('mouseenter', () => { card.style.background = 'rgba(46,204,113,0.2)'; });
-        card.addEventListener('mouseleave', () => { card.style.background = 'rgba(255,255,255,0.1)'; });
+        card.addEventListener('mouseenter', () => {
+          card.style.background = 'rgba(46,204,113,0.2)';
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.background = 'rgba(255,255,255,0.1)';
+        });
 
         // Craft All button
         const maxCraftable = this.getMaxCraftable(recipe);
         if (maxCraftable > 1) {
           const craftAllBtn = document.createElement('button');
-          craftAllBtn.style.cssText = 'margin-top:8px;background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-family:monospace;font-size:11px;pointer-events:auto;transition:background 0.15s;';
+          craftAllBtn.style.cssText =
+            'margin-top:8px;background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-family:monospace;font-size:11px;pointer-events:auto;transition:background 0.15s;';
           craftAllBtn.textContent = `Craft All (×${maxCraftable})`;
           craftAllBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -141,8 +164,12 @@ export class CraftingUI {
             }
             this.refresh();
           });
-          craftAllBtn.addEventListener('mouseenter', () => { craftAllBtn.style.background = '#27ae60'; });
-          craftAllBtn.addEventListener('mouseleave', () => { craftAllBtn.style.background = '#2ecc71'; });
+          craftAllBtn.addEventListener('mouseenter', () => {
+            craftAllBtn.style.background = '#27ae60';
+          });
+          craftAllBtn.addEventListener('mouseleave', () => {
+            craftAllBtn.style.background = '#2ecc71';
+          });
           card.appendChild(craftAllBtn);
         }
       }
@@ -167,7 +194,8 @@ export class CraftingUI {
 
     if (recipes.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'grid-column:1/-1;text-align:center;color:#7f8c8d;padding:40px;font-size:16px;';
+      empty.style.cssText =
+        'grid-column:1/-1;text-align:center;color:#7f8c8d;padding:40px;font-size:16px;';
       empty.textContent = 'No recipes available for this station.';
       this.recipeList.appendChild(empty);
     }
@@ -186,10 +214,19 @@ export class CraftingUI {
     this.refresh();
   }
 
-  setCraftCallback(cb: (recipe: CraftingRecipe) => void): void { this.onCraft = cb; }
-  get isVisible(): boolean { return this.visible; }
-  hide(): void { this.visible = false; this.overlay.style.display = 'none'; }
-  destroy(): void { this.overlay.remove(); }
+  setCraftCallback(cb: (recipe: CraftingRecipe) => void): void {
+    this.onCraft = cb;
+  }
+  get isVisible(): boolean {
+    return this.visible;
+  }
+  hide(): void {
+    this.visible = false;
+    this.overlay.style.display = 'none';
+  }
+  destroy(): void {
+    this.overlay.remove();
+  }
 
   /** How many times can we craft this recipe with current inventory? */
   private getMaxCraftable(recipe: CraftingRecipe): number {

@@ -95,12 +95,12 @@ export function getItemTierColor(itemId: string): string {
   if (!def) return 'rgba(255,255,255,0.1)';
   if (def.tier) {
     const tierColors: Record<number, string> = {
-      1: 'rgba(139,90,43,0.5)',    // wood
-      2: 'rgba(150,150,150,0.5)',  // stone
-      3: 'rgba(200,200,210,0.6)',  // iron
-      4: 'rgba(255,215,0,0.5)',    // gold
-      5: 'rgba(138,43,226,0.5)',   // crystal
-      6: 'rgba(0,191,255,0.6)',    // diamond
+      1: 'rgba(139,90,43,0.5)', // wood
+      2: 'rgba(150,150,150,0.5)', // stone
+      3: 'rgba(200,200,210,0.6)', // iron
+      4: 'rgba(255,215,0,0.5)', // gold
+      5: 'rgba(138,43,226,0.5)', // crystal
+      6: 'rgba(0,191,255,0.6)', // diamond
     };
     return tierColors[def.tier] ?? 'rgba(255,255,255,0.1)';
   }

@@ -21,10 +21,12 @@ export class TutorialSystem {
     this.steps = [];
     this.overlay = document.createElement('div');
     this.overlay.id = 'tutorial';
-    this.overlay.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:180;pointer-events:none;text-align:center;font-family:monospace;';
+    this.overlay.style.cssText =
+      'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:180;pointer-events:none;text-align:center;font-family:monospace;';
 
     this.stepEl = document.createElement('div');
-    this.stepEl.style.cssText = 'background:rgba(0,0,0,0.75);color:#fff;padding:12px 24px;border-radius:8px;font-size:16px;border:1px solid rgba(241,196,15,0.4);transition:opacity 0.5s;max-width:400px;';
+    this.stepEl.style.cssText =
+      'background:rgba(0,0,0,0.75);color:#fff;padding:12px 24px;border-radius:8px;font-size:16px;border:1px solid rgba(241,196,15,0.4);transition:opacity 0.5s;max-width:400px;';
     this.overlay.appendChild(this.stepEl);
     document.body.appendChild(this.overlay);
   }
@@ -59,8 +61,10 @@ export class TutorialSystem {
 
   private complete(): void {
     this.completed = true;
-    this.stepEl.innerHTML = '🎉 Tutorial complete! You\'re ready to explore!';
-    setTimeout(() => { this.overlay.style.display = 'none'; }, 4000);
+    this.stepEl.innerHTML = "🎉 Tutorial complete! You're ready to explore!";
+    setTimeout(() => {
+      this.overlay.style.display = 'none';
+    }, 4000);
   }
 
   dismiss(): void {
@@ -68,6 +72,10 @@ export class TutorialSystem {
     this.overlay.style.display = 'none';
   }
 
-  get isComplete(): boolean { return this.completed; }
-  destroy(): void { this.overlay.remove(); }
+  get isComplete(): boolean {
+    return this.completed;
+  }
+  destroy(): void {
+    this.overlay.remove();
+  }
 }

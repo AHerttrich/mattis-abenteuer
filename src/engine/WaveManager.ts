@@ -11,7 +11,10 @@ import { eventBus, Events } from '../utils';
 import { WarriorType } from '../ecs/Component';
 
 // ── Wave composition table ──────────────────────────────────
-interface WaveUnit { type: WarriorType; count: number }
+interface WaveUnit {
+  type: WarriorType;
+  count: number;
+}
 function wave(n: number): WaveUnit[] {
   const units: WaveUnit[] = [];
   // Swordsmen in every wave, scaling up
@@ -23,7 +26,11 @@ function wave(n: number): WaveUnit[] {
   // Cavalry from wave 7
   if (n >= 7) units.push({ type: WarriorType.CAVALRY, count: Math.floor((n - 5) / 2) });
   // Catapults from wave 9
-  if (n >= 9) units.push({ type: WarriorType.CATAPULT_OPERATOR, count: Math.max(1, Math.floor((n - 8) / 2)) });
+  if (n >= 9)
+    units.push({
+      type: WarriorType.CATAPULT_OPERATOR,
+      count: Math.max(1, Math.floor((n - 8) / 2)),
+    });
   // Boss every 10 waves
   if (n > 0 && n % 10 === 0) units.push({ type: WarriorType.CASTLE_BOSS, count: 1 });
   return units;
@@ -51,7 +58,7 @@ export const WaveEvents = {
 export interface WaveState {
   waveNumber: number;
   phase: 'peace' | 'warning' | 'active';
-  timer: number;        // seconds remaining in current phase
+  timer: number; // seconds remaining in current phase
   enemiesAlive: number; // during active wave
   totalEnemies: number; // total spawned this wave
 }
@@ -66,9 +73,9 @@ export class WaveManager {
   private spawnTimer = 0;
 
   // Config
-  private peaceDuration = 90;   // seconds of peace after clearing
+  private peaceDuration = 90; // seconds of peace after clearing
   private warningDuration = 60; // seconds of warning before spawn
-  private spawnInterval = 1.5;  // seconds between unit group spawns
+  private spawnInterval = 1.5; // seconds between unit group spawns
 
   // Callback to actually spawn warriors
   private spawnCallback: ((type: WarriorType, count: number) => void) | null = null;
@@ -104,7 +111,10 @@ export class WaveManager {
           this.phase = 'warning';
           this.timer = this.warningDuration;
           this.waveNumber++;
-          eventBus.emit(WaveEvents.WAVE_WARNING, { wave: this.waveNumber, seconds: this.warningDuration });
+          eventBus.emit(WaveEvents.WAVE_WARNING, {
+            wave: this.waveNumber,
+            seconds: this.warningDuration,
+          });
         }
         break;
 
@@ -137,7 +147,10 @@ export class WaveManager {
     this.totalEnemies = this.spawnQueue.reduce((s, u) => s + u.count, 0);
     this.enemiesAlive = this.totalEnemies;
     this.spawnTimer = 0; // spawn first group immediately
-    eventBus.emit(WaveEvents.WAVE_START, { wave: this.waveNumber, totalEnemies: this.totalEnemies });
+    eventBus.emit(WaveEvents.WAVE_START, {
+      wave: this.waveNumber,
+      totalEnemies: this.totalEnemies,
+    });
   }
 
   private clearWave(): void {

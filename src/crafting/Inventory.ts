@@ -63,7 +63,7 @@ export class Inventory {
   damageItem(slotIndex: number, amount = 1): boolean {
     const slot = this.slots[slotIndex];
     if (!slot) return false;
-    
+
     // If it doesn't have initialized durability but the def says it should, initialize it
     if (slot.durability === undefined) {
       const def = getItemDef(slot.itemId);

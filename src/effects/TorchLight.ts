@@ -7,7 +7,9 @@ import * as THREE from 'three';
 
 interface TorchEntry {
   light: THREE.PointLight;
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   baseIntensity: number;
   flickerSpeed: number;
   flickerAmount: number;
@@ -34,7 +36,10 @@ export class TorchLightManager {
     this.scene.add(light);
 
     this.torches.push({
-      light, x, y, z,
+      light,
+      x,
+      y,
+      z,
       baseIntensity: intensity,
       flickerSpeed: 4 + Math.random() * 3,
       flickerAmount: 0.15 + Math.random() * 0.15,
@@ -57,8 +62,9 @@ export class TorchLightManager {
 
     for (const torch of this.torches) {
       // Flicker
-      const flicker = Math.sin(this.time * torch.flickerSpeed) * torch.flickerAmount
-        + Math.sin(this.time * torch.flickerSpeed * 1.7 + 1.3) * torch.flickerAmount * 0.5;
+      const flicker =
+        Math.sin(this.time * torch.flickerSpeed) * torch.flickerAmount +
+        Math.sin(this.time * torch.flickerSpeed * 1.7 + 1.3) * torch.flickerAmount * 0.5;
       torch.light.intensity = torch.baseIntensity + flicker;
 
       // Slight position wobble for realism
@@ -66,12 +72,15 @@ export class TorchLightManager {
       torch.light.position.z = torch.z + 0.5 + Math.cos(this.time * 1.9) * 0.02;
 
       // Disable lights far from player for performance
-      const dx = torch.x - playerX, dz = torch.z - playerZ;
-      torch.light.visible = (dx * dx + dz * dz) < 40 * 40;
+      const dx = torch.x - playerX,
+        dz = torch.z - playerZ;
+      torch.light.visible = dx * dx + dz * dz < 40 * 40;
     }
   }
 
-  get count(): number { return this.torches.length; }
+  get count(): number {
+    return this.torches.length;
+  }
 
   destroy(): void {
     for (const t of this.torches) {

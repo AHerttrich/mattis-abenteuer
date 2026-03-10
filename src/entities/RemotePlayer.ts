@@ -98,7 +98,8 @@ export class RemotePlayer {
     const v = worldPos.project(this.camera);
 
     if (v.z < 1) {
-      const w = window.innerWidth, h = window.innerHeight;
+      const w = window.innerWidth,
+        h = window.innerHeight;
       const sx = (v.x * 0.5 + 0.5) * w;
       const sy = -(v.y * 0.5 - 0.5) * h;
       this.nameTag.style.left = `${sx}px`;

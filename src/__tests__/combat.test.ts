@@ -41,13 +41,15 @@ describe('CombatSystem', () => {
 
   it('should find nearest enemy', () => {
     const player = new Entity('player');
-    player.addComponent(createPosition(0, 0, 0))
+    player
+      .addComponent(createPosition(0, 0, 0))
       .addComponent(createHealth(100))
       .addComponent(createTeam('player'));
     world.addEntity(player);
 
     const enemy = new Entity('enemy');
-    enemy.addComponent(createPosition(5, 0, 0))
+    enemy
+      .addComponent(createPosition(5, 0, 0))
       .addComponent(createHealth(50))
       .addComponent(createTeam('enemy'));
     world.addEntity(enemy);

@@ -4,7 +4,9 @@ import { ECSWorld } from '../ecs/ECSWorld';
 import { createPosition, createHealth } from '../ecs/Component';
 
 describe('ECS', () => {
-  beforeEach(() => { resetEntityIdCounter(); });
+  beforeEach(() => {
+    resetEntityIdCounter();
+  });
 
   describe('Entity', () => {
     it('should create entity with unique ID', () => {
@@ -41,7 +43,9 @@ describe('ECS', () => {
 
   describe('ECSWorld', () => {
     let world: ECSWorld;
-    beforeEach(() => { world = new ECSWorld(); });
+    beforeEach(() => {
+      world = new ECSWorld();
+    });
 
     it('should add and retrieve entities', () => {
       const e = new Entity('test');

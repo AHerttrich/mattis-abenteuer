@@ -19,7 +19,11 @@ export class DayNightCycle {
     night: new THREE.Color(0x151540),
   };
 
-  constructor(scene: THREE.Scene, sunLight: THREE.DirectionalLight, ambientLight: THREE.AmbientLight) {
+  constructor(
+    scene: THREE.Scene,
+    sunLight: THREE.DirectionalLight,
+    ambientLight: THREE.AmbientLight,
+  ) {
     this.scene = scene;
     this.sunLight = sunLight;
     this.ambientLight = ambientLight;
@@ -108,6 +112,10 @@ export class DayNightCycle {
     return this.timeOfDay > 0.8 || this.timeOfDay < 0.2;
   }
 
-  get time(): number { return this.timeOfDay; }
-  set time(v: number) { this.timeOfDay = Math.max(0, Math.min(1, v)); }
+  get time(): number {
+    return this.timeOfDay;
+  }
+  set time(v: number) {
+    this.timeOfDay = Math.max(0, Math.min(1, v));
+  }
 }

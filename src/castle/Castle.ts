@@ -19,7 +19,9 @@ export enum BuildingType {
 export interface CastleBuilding {
   id: string;
   type: BuildingType;
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   hp: number;
   maxHp: number;
   spawnsUnits: WarriorType[] | null;
@@ -53,22 +55,30 @@ const BUILDING_HP: Record<string, number> = {
 export class Castle {
   readonly id: string;
   readonly owner: 'player' | 'enemy';
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   buildings: CastleBuilding[] = [];
   private nextBuildingId = 0;
 
   constructor(id: string, owner: 'player' | 'enemy', x: number, y: number, z: number) {
     this.id = id;
     this.owner = owner;
-    this.x = x; this.y = y; this.z = z;
+    this.x = x;
+    this.y = y;
+    this.z = z;
   }
 
   addBuilding(type: BuildingType, x: number, y: number, z: number): CastleBuilding {
     const maxHp = BUILDING_HP[type] ?? 200;
     const building: CastleBuilding = {
       id: `${this.id}_bld_${this.nextBuildingId++}`,
-      type, x, y, z,
-      hp: maxHp, maxHp,
+      type,
+      x,
+      y,
+      z,
+      hp: maxHp,
+      maxHp,
       spawnsUnits: BUILDING_SPAWNS[type] ?? null,
       spawnInterval: WARRIOR_SPAWN_INTERVAL,
       lastSpawnTime: 0,
@@ -79,8 +89,16 @@ export class Castle {
   }
 
   /** Update spawners. Returns list of warriors to spawn. */
-  update(time: number): { buildingId: string; warriorType: WarriorType; x: number; y: number; z: number }[] {
-    const spawns: { buildingId: string; warriorType: WarriorType; x: number; y: number; z: number }[] = [];
+  update(
+    time: number,
+  ): { buildingId: string; warriorType: WarriorType; x: number; y: number; z: number }[] {
+    const spawns: {
+      buildingId: string;
+      warriorType: WarriorType;
+      x: number;
+      y: number;
+      z: number;
+    }[] = [];
     for (const bld of this.buildings) {
       if (!bld.spawnsUnits || bld.hp <= 0) continue;
       if (time - bld.lastSpawnTime >= bld.spawnInterval) {
@@ -107,11 +125,21 @@ export class Castle {
     return bld.hp <= 0;
   }
 
-  get totalHp(): number { return this.buildings.reduce((s, b) => s + b.hp, 0); }
-  get maxHp(): number { return this.buildings.reduce((s, b) => s + b.maxHp, 0); }
-  get isDestroyed(): boolean { return this.throne?.hp === 0; }
-  get throne(): CastleBuilding | undefined { return this.buildings.find((b) => b.type === BuildingType.THRONE_ROOM); }
-  get spawnBuildings(): CastleBuilding[] { return this.buildings.filter((b) => b.spawnsUnits && b.hp > 0); }
+  get totalHp(): number {
+    return this.buildings.reduce((s, b) => s + b.hp, 0);
+  }
+  get maxHp(): number {
+    return this.buildings.reduce((s, b) => s + b.maxHp, 0);
+  }
+  get isDestroyed(): boolean {
+    return this.throne?.hp === 0;
+  }
+  get throne(): CastleBuilding | undefined {
+    return this.buildings.find((b) => b.type === BuildingType.THRONE_ROOM);
+  }
+  get spawnBuildings(): CastleBuilding[] {
+    return this.buildings.filter((b) => b.spawnsUnits && b.hp > 0);
+  }
 
   /** Find a building whose footprint contains the given world position. */
   getBuildingAt(wx: number, wz: number): CastleBuilding | undefined {
@@ -127,8 +155,12 @@ export class Castle {
 
   /** Get axis-aligned bounding box of all buildings (world coords). */
   getBounds(): { minX: number; maxX: number; minZ: number; maxZ: number } {
-    if (this.buildings.length === 0) return { minX: this.x - 20, maxX: this.x + 20, minZ: this.z - 20, maxZ: this.z + 20 };
-    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    if (this.buildings.length === 0)
+      return { minX: this.x - 20, maxX: this.x + 20, minZ: this.z - 20, maxZ: this.z + 20 };
+    let minX = Infinity,
+      maxX = -Infinity,
+      minZ = Infinity,
+      maxZ = -Infinity;
     for (const bld of this.buildings) {
       const size = BUILDING_FOOTPRINT[bld.type] ?? 5;
       const half = Math.floor(size / 2);

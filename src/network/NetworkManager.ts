@@ -31,9 +31,15 @@ export class NetworkManager {
   private _isConnected = false;
   private _roomCode = '';
 
-  get isHost(): boolean { return this._isHost; }
-  get isConnected(): boolean { return this._isConnected; }
-  get roomCode(): string { return this._roomCode; }
+  get isHost(): boolean {
+    return this._isHost;
+  }
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+  get roomCode(): string {
+    return this._roomCode;
+  }
 
   /** Host a game — creates a Peer and waits for a connection. */
   host(): Promise<string> {

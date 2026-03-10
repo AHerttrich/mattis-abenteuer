@@ -3,7 +3,9 @@ import { Castle, BuildingType } from '../castle/Castle';
 
 describe('Castle', () => {
   let castle: Castle;
-  beforeEach(() => { castle = new Castle('test', 'player', 100, 20, 100); });
+  beforeEach(() => {
+    castle = new Castle('test', 'player', 100, 20, 100);
+  });
 
   it('should add buildings', () => {
     castle.addBuilding(BuildingType.BARRACKS, 100, 20, 100);

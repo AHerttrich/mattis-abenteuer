@@ -1,4 +1,11 @@
-export { BlockType, getBlockProperties, isBlockSolid, isBlockTransparent, getBlockColor, getAllBlockTypes } from './BlockType';
+export {
+  BlockType,
+  getBlockProperties,
+  isBlockSolid,
+  isBlockTransparent,
+  getBlockColor,
+  getAllBlockTypes,
+} from './BlockType';
 export { SimplexNoise } from './SimplexNoise';
 export { Chunk } from './Chunk';
 export { buildChunkMesh } from './ChunkMesher';

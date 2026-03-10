@@ -24,7 +24,9 @@ export class InventoryUI {
   // Tooltip
   private tooltip: HTMLDivElement;
 
-  get isVisible(): boolean { return this._isVisible; }
+  get isVisible(): boolean {
+    return this._isVisible;
+  }
 
   constructor(inventory: Inventory) {
     this.inventory = inventory;
@@ -97,12 +99,14 @@ export class InventoryUI {
 
     // Backpack section
     const bpLabel = document.createElement('div');
-    bpLabel.style.cssText = 'font-size:11px;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;';
+    bpLabel.style.cssText =
+      'font-size:11px;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;';
     bpLabel.textContent = 'Backpack';
     panel.appendChild(bpLabel);
 
     const bpGrid = document.createElement('div');
-    bpGrid.style.cssText = 'display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:16px;';
+    bpGrid.style.cssText =
+      'display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:16px;';
     for (let i = hotbarSize; i < slots.length; i++) {
       bpGrid.appendChild(this.createSlotElement(i, slots[i]));
     }
@@ -110,7 +114,8 @@ export class InventoryUI {
 
     // Hotbar section
     const hbLabel = document.createElement('div');
-    hbLabel.style.cssText = 'font-size:11px;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;';
+    hbLabel.style.cssText =
+      'font-size:11px;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;';
     hbLabel.textContent = 'Hotbar';
     panel.appendChild(hbLabel);
 
@@ -134,7 +139,13 @@ export class InventoryUI {
     const el = document.createElement('div');
     const isHotbarActive = index === this.inventory.selectedHotbarSlot && index < 9;
     const isDragSource = this.dragSource === index;
-    const borderColor = isDragSource ? '#f1c40f' : isHotbarActive ? '#3498db' : (stack ? getItemTierColor(stack.itemId) : 'rgba(255,255,255,0.06)');
+    const borderColor = isDragSource
+      ? '#f1c40f'
+      : isHotbarActive
+        ? '#3498db'
+        : stack
+          ? getItemTierColor(stack.itemId)
+          : 'rgba(255,255,255,0.06)';
     const bgColor = isDragSource ? 'rgba(241,196,15,0.15)' : 'rgba(255,255,255,0.03)';
 
     el.style.cssText = `width:52px;height:52px;border:2px solid ${borderColor};
@@ -149,14 +160,16 @@ export class InventoryUI {
 
       // Icon
       const iconSpan = document.createElement('span');
-      iconSpan.style.cssText = 'font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));pointer-events:none;';
+      iconSpan.style.cssText =
+        'font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));pointer-events:none;';
       iconSpan.textContent = icon;
       el.appendChild(iconSpan);
 
       // Count badge
       if (stack.count > 1) {
         const badge = document.createElement('span');
-        badge.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;pointer-events:none;';
+        badge.style.cssText =
+          'position:absolute;bottom:1px;right:3px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;pointer-events:none;';
         badge.textContent = String(stack.count);
         el.appendChild(badge);
       }
@@ -229,7 +242,8 @@ export class InventoryUI {
     this.dragGhost.textContent = icon;
     if (stack.count > 1) {
       const badge = document.createElement('span');
-      badge.style.cssText = 'position:absolute;bottom:-4px;right:-4px;font-size:11px;font-weight:bold;color:#fff;background:rgba(0,0,0,0.7);border-radius:4px;padding:0 3px;';
+      badge.style.cssText =
+        'position:absolute;bottom:-4px;right:-4px;font-size:11px;font-weight:bold;color:#fff;background:rgba(0,0,0,0.7);border-radius:4px;padding:0 3px;';
       badge.textContent = String(stack.count);
       this.dragGhost.appendChild(badge);
     }
@@ -239,7 +253,10 @@ export class InventoryUI {
   }
 
   private removeDragGhost(): void {
-    if (this.dragGhost) { this.dragGhost.remove(); this.dragGhost = null; }
+    if (this.dragGhost) {
+      this.dragGhost.remove();
+      this.dragGhost = null;
+    }
   }
 
   private onMouseMove(e: MouseEvent): void {
@@ -280,12 +297,15 @@ export class InventoryUI {
     const stats: string[] = [];
     if (def?.damage) stats.push(`⚔️ Damage: <span style="color:#e74c3c">${def.damage}</span>`);
     if (def?.armor) stats.push(`🛡️ Armor: <span style="color:#3498db">${def.armor}</span>`);
-    if (def?.hungerRestore) stats.push(`🍖 Hunger: <span style="color:#2ecc71">+${def.hungerRestore}</span>`);
+    if (def?.hungerRestore)
+      stats.push(`🍖 Hunger: <span style="color:#2ecc71">+${def.hungerRestore}</span>`);
 
     if (stack.durability !== undefined && def?.durability) {
       const pct = Math.round((stack.durability / def.durability) * 100);
       const color = pct > 50 ? '#2ecc71' : pct > 20 ? '#f1c40f' : '#e74c3c';
-      stats.push(`🔧 Durability: <span style="color:${color}">${stack.durability}/${def.durability} (${pct}%)</span>`);
+      stats.push(
+        `🔧 Durability: <span style="color:${color}">${stack.durability}/${def.durability} (${pct}%)</span>`,
+      );
     }
 
     if (stats.length) {
@@ -299,7 +319,14 @@ export class InventoryUI {
 
     // Category
     if (def?.category) {
-      const typeColors: Record<string, string> = { weapon: '#e74c3c', tool: '#3498db', armor: '#9b59b6', food: '#2ecc71', block: '#95a5a6', material: '#7f8c8d' };
+      const typeColors: Record<string, string> = {
+        weapon: '#e74c3c',
+        tool: '#3498db',
+        armor: '#9b59b6',
+        food: '#2ecc71',
+        block: '#95a5a6',
+        material: '#7f8c8d',
+      };
       html += `<div style="color:${typeColors[def.category] ?? '#666'};font-size:10px;text-transform:uppercase;margin-top:4px;letter-spacing:1px;">${def.category}</div>`;
     }
 
@@ -308,8 +335,8 @@ export class InventoryUI {
 
     this.tooltip.innerHTML = html;
     this.tooltip.style.display = 'block';
-    this.tooltip.style.left = (x + 16) + 'px';
-    this.tooltip.style.top = (y - 10) + 'px';
+    this.tooltip.style.left = x + 16 + 'px';
+    this.tooltip.style.top = y - 10 + 'px';
   }
 
   private hideTooltip(): void {

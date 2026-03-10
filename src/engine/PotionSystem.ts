@@ -13,8 +13,8 @@ export enum PotionType {
 
 export interface ActiveEffect {
   type: PotionType;
-  duration: number;     // remaining seconds
-  magnitude: number;    // strength multiplier
+  duration: number; // remaining seconds
+  magnitude: number; // strength multiplier
 }
 
 export interface PotionRecipe {
@@ -27,22 +27,84 @@ export interface PotionRecipe {
 }
 
 const POTION_RECIPES: PotionRecipe[] = [
-  { result: PotionType.HEALING, name: 'Healing Potion', icon: '❤️', ingredients: [{ itemId: 'apple', count: 3 }, { itemId: 'crystal', count: 1 }], duration: 0, magnitude: 20 },
-  { result: PotionType.SPEED, name: 'Speed Potion', icon: '⚡', ingredients: [{ itemId: 'gold_ingot', count: 2 }, { itemId: 'crystal', count: 1 }], duration: 30, magnitude: 1.5 },
-  { result: PotionType.STRENGTH, name: 'Strength Potion', icon: '💪', ingredients: [{ itemId: 'iron_ingot', count: 3 }, { itemId: 'crystal', count: 2 }], duration: 30, magnitude: 1.5 },
-  { result: PotionType.RESISTANCE, name: 'Resistance Potion', icon: '🛡️', ingredients: [{ itemId: 'cobblestone', count: 10 }, { itemId: 'crystal', count: 2 }], duration: 30, magnitude: 0.5 },
-  { result: PotionType.NIGHT_VISION, name: 'Night Vision Potion', icon: '👁️', ingredients: [{ itemId: 'coal', count: 5 }, { itemId: 'crystal', count: 1 }], duration: 60, magnitude: 1 },
-  { result: PotionType.FIRE_RESIST, name: 'Fire Resist Potion', icon: '🔥', ingredients: [{ itemId: 'gold_ingot', count: 3 }, { itemId: 'diamond', count: 1 }], duration: 45, magnitude: 1 },
+  {
+    result: PotionType.HEALING,
+    name: 'Healing Potion',
+    icon: '❤️',
+    ingredients: [
+      { itemId: 'apple', count: 3 },
+      { itemId: 'crystal', count: 1 },
+    ],
+    duration: 0,
+    magnitude: 20,
+  },
+  {
+    result: PotionType.SPEED,
+    name: 'Speed Potion',
+    icon: '⚡',
+    ingredients: [
+      { itemId: 'gold_ingot', count: 2 },
+      { itemId: 'crystal', count: 1 },
+    ],
+    duration: 30,
+    magnitude: 1.5,
+  },
+  {
+    result: PotionType.STRENGTH,
+    name: 'Strength Potion',
+    icon: '💪',
+    ingredients: [
+      { itemId: 'iron_ingot', count: 3 },
+      { itemId: 'crystal', count: 2 },
+    ],
+    duration: 30,
+    magnitude: 1.5,
+  },
+  {
+    result: PotionType.RESISTANCE,
+    name: 'Resistance Potion',
+    icon: '🛡️',
+    ingredients: [
+      { itemId: 'cobblestone', count: 10 },
+      { itemId: 'crystal', count: 2 },
+    ],
+    duration: 30,
+    magnitude: 0.5,
+  },
+  {
+    result: PotionType.NIGHT_VISION,
+    name: 'Night Vision Potion',
+    icon: '👁️',
+    ingredients: [
+      { itemId: 'coal', count: 5 },
+      { itemId: 'crystal', count: 1 },
+    ],
+    duration: 60,
+    magnitude: 1,
+  },
+  {
+    result: PotionType.FIRE_RESIST,
+    name: 'Fire Resist Potion',
+    icon: '🔥',
+    ingredients: [
+      { itemId: 'gold_ingot', count: 3 },
+      { itemId: 'diamond', count: 1 },
+    ],
+    duration: 45,
+    magnitude: 1,
+  },
 ];
 
 export class PotionSystem {
   private activeEffects: ActiveEffect[] = [];
 
-  getRecipes(): PotionRecipe[] { return POTION_RECIPES; }
+  getRecipes(): PotionRecipe[] {
+    return POTION_RECIPES;
+  }
 
   /** Use a potion: add its effect. */
   usePotion(type: PotionType): void {
-    const recipe = POTION_RECIPES.find(r => r.result === type);
+    const recipe = POTION_RECIPES.find((r) => r.result === type);
     if (!recipe) return;
 
     // Healing is instant
@@ -52,7 +114,7 @@ export class PotionSystem {
     }
 
     // Remove existing effect of same type
-    this.activeEffects = this.activeEffects.filter(e => e.type !== type);
+    this.activeEffects = this.activeEffects.filter((e) => e.type !== type);
     this.activeEffects.push({ type, duration: recipe.duration, magnitude: recipe.magnitude });
   }
 
@@ -61,38 +123,40 @@ export class PotionSystem {
     for (const eff of this.activeEffects) {
       eff.duration -= dt;
     }
-    this.activeEffects = this.activeEffects.filter(e => e.duration > 0);
+    this.activeEffects = this.activeEffects.filter((e) => e.duration > 0);
   }
 
   /** Get active effect modifier. */
   getSpeedMultiplier(): number {
-    const eff = this.activeEffects.find(e => e.type === PotionType.SPEED);
+    const eff = this.activeEffects.find((e) => e.type === PotionType.SPEED);
     return eff ? eff.magnitude : 1;
   }
 
   getStrengthMultiplier(): number {
-    const eff = this.activeEffects.find(e => e.type === PotionType.STRENGTH);
+    const eff = this.activeEffects.find((e) => e.type === PotionType.STRENGTH);
     return eff ? eff.magnitude : 1;
   }
 
   getDamageReduction(): number {
-    const eff = this.activeEffects.find(e => e.type === PotionType.RESISTANCE);
+    const eff = this.activeEffects.find((e) => e.type === PotionType.RESISTANCE);
     return eff ? eff.magnitude : 1; // 0.5 = take half damage
   }
 
   hasNightVision(): boolean {
-    return this.activeEffects.some(e => e.type === PotionType.NIGHT_VISION);
+    return this.activeEffects.some((e) => e.type === PotionType.NIGHT_VISION);
   }
 
   hasFireResist(): boolean {
-    return this.activeEffects.some(e => e.type === PotionType.FIRE_RESIST);
+    return this.activeEffects.some((e) => e.type === PotionType.FIRE_RESIST);
   }
 
-  getActiveEffects(): ActiveEffect[] { return [...this.activeEffects]; }
+  getActiveEffects(): ActiveEffect[] {
+    return [...this.activeEffects];
+  }
 
   /** Healing amount for a healing potion. */
   getHealingAmount(): number {
-    const recipe = POTION_RECIPES.find(r => r.result === PotionType.HEALING);
+    const recipe = POTION_RECIPES.find((r) => r.result === PotionType.HEALING);
     return recipe ? recipe.magnitude : 20;
   }
 }

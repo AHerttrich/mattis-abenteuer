@@ -2,8 +2,25 @@
  * CombatSystem — Handles damage calculation, attacks, and projectiles.
  */
 
-import { eventBus, Events, ATTACK_COOLDOWN, MELEE_RANGE, CATAPULT_RANGE, KNOCKBACK_FORCE, CRIT_CHANCE, CRIT_MULTIPLIER } from '../utils';
-import type { ECSWorld, Entity, HealthComponent, CombatComponent, PositionComponent, TeamComponent, WarriorComponent } from '../ecs';
+import {
+  eventBus,
+  Events,
+  ATTACK_COOLDOWN,
+  MELEE_RANGE,
+  CATAPULT_RANGE,
+  KNOCKBACK_FORCE,
+  CRIT_CHANCE,
+  CRIT_MULTIPLIER,
+} from '../utils';
+import type {
+  ECSWorld,
+  Entity,
+  HealthComponent,
+  CombatComponent,
+  PositionComponent,
+  TeamComponent,
+  WarriorComponent,
+} from '../ecs';
 import { WarriorType } from '../ecs/Component';
 
 export class CombatSystem {
@@ -68,10 +85,15 @@ export class CombatSystem {
   }
 
   /** Apply raw damage (bypasses cooldown/range). */
-  applyDamage(entity: Entity, health: HealthComponent, rawDamage: number, attackerPos?: PositionComponent | {x: number, z: number}): void {
+  applyDamage(
+    entity: Entity,
+    health: HealthComponent,
+    rawDamage: number,
+    attackerPos?: PositionComponent | { x: number; z: number },
+  ): void {
     let finalDamage = rawDamage;
     const warrior = entity.getComponent<WarriorComponent>('warrior');
-    
+
     // Shield-bearer frontal damage reduction check
     if (warrior?.warriorType === WarriorType.SHIELD_BEARER && attackerPos) {
       const pos = entity.getComponent<PositionComponent>('position');
@@ -80,18 +102,23 @@ export class CombatSystem {
         let diff = (angleToAttacker - pos.rotationY) % (Math.PI * 2);
         if (diff > Math.PI) diff -= Math.PI * 2;
         if (diff < -Math.PI) diff += Math.PI * 2;
-        
+
         // 120-degree cone block
-         if (Math.abs(diff) <= Math.PI / 1.5) { 
-           finalDamage = Math.max(1, Math.floor(finalDamage * 0.33)); 
-           eventBus.emit(Events.SHIELD_BLOCK, { entityId: entity.id, damage: finalDamage });
-         }
+        if (Math.abs(diff) <= Math.PI / 1.5) {
+          finalDamage = Math.max(1, Math.floor(finalDamage * 0.33));
+          eventBus.emit(Events.SHIELD_BLOCK, { entityId: entity.id, damage: finalDamage });
+        }
       }
     }
 
     health.current = Math.max(0, health.current - finalDamage);
     const pos = entity.getComponent<PositionComponent>('position');
-    eventBus.emit(Events.ENTITY_DAMAGED, { entityId: entity.id, damage: finalDamage, remaining: health.current, pos });
+    eventBus.emit(Events.ENTITY_DAMAGED, {
+      entityId: entity.id,
+      damage: finalDamage,
+      remaining: health.current,
+      pos,
+    });
     if (health.current <= 0) {
       health.isDead = true;
       eventBus.emit(Events.ENTITY_DIED, { entityId: entity.id, tag: entity.tag, pos });
@@ -137,7 +164,11 @@ export class CombatSystem {
       const oWarrior = other.getComponent<WarriorComponent>('warrior');
       if (isArcher && oWarrior) {
         // Archers prefer squishy targets
-        if (oWarrior.warriorType === WarriorType.ARCHER || oWarrior.warriorType === WarriorType.CATAPULT_OPERATOR) score += 2;
+        if (
+          oWarrior.warriorType === WarriorType.ARCHER ||
+          oWarrior.warriorType === WarriorType.CATAPULT_OPERATOR
+        )
+          score += 2;
       } else if (!isArcher && oWarrior) {
         // Melee prefer nearby threats already engaging
         if (dist < 5) score += 2;
@@ -160,7 +191,9 @@ export class CombatSystem {
   }
 
   private distance(a: PositionComponent, b: PositionComponent): number {
-    const dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
+    const dx = a.x - b.x,
+      dy = a.y - b.y,
+      dz = a.z - b.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 }

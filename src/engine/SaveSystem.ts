@@ -12,8 +12,11 @@ interface SaveData {
   version: 2;
   timestamp: number;
   player: {
-    x: number; y: number; z: number;
-    yaw: number; pitch: number;
+    x: number;
+    y: number;
+    z: number;
+    yaw: number;
+    pitch: number;
     health: number;
   };
   inventory: {
@@ -21,11 +24,15 @@ interface SaveData {
     selectedHotbar: number;
   };
   playerCastle: {
-    x: number; y: number; z: number;
+    x: number;
+    y: number;
+    z: number;
     buildings: SerializedBuilding[];
   } | null;
   enemyCastle: {
-    x: number; y: number; z: number;
+    x: number;
+    y: number;
+    z: number;
     buildings: SerializedBuilding[];
     discovered: boolean;
   } | null;
@@ -36,8 +43,11 @@ interface SaveData {
 interface SerializedBuilding {
   id: string;
   type: string;
-  x: number; y: number; z: number;
-  hp: number; maxHp: number;
+  x: number;
+  y: number;
+  z: number;
+  hp: number;
+  maxHp: number;
 }
 
 export class SaveSystem {
@@ -57,23 +67,36 @@ export class SaveSystem {
         version: 2,
         timestamp: Date.now(),
         player: {
-          x: player.x, y: player.y, z: player.z,
-          yaw: player.yaw, pitch: player.pitch,
+          x: player.x,
+          y: player.y,
+          z: player.z,
+          yaw: player.yaw,
+          pitch: player.pitch,
           health,
         },
         inventory: {
-          slots: inventory.slots.map((s) => s ? { itemId: s.itemId, count: s.count, durability: s.durability } : null),
+          slots: inventory.slots.map((s) =>
+            s ? { itemId: s.itemId, count: s.count, durability: s.durability } : null,
+          ),
           selectedHotbar: inventory.selectedHotbarSlot,
         },
-        playerCastle: playerCastle ? {
-          x: playerCastle.x, y: playerCastle.y, z: playerCastle.z,
-          buildings: this.serializeBuildings(playerCastle.buildings),
-        } : null,
-        enemyCastle: enemyCastle ? {
-          x: enemyCastle.x, y: enemyCastle.y, z: enemyCastle.z,
-          buildings: this.serializeBuildings(enemyCastle.buildings),
-          discovered: enemyDiscovered,
-        } : null,
+        playerCastle: playerCastle
+          ? {
+              x: playerCastle.x,
+              y: playerCastle.y,
+              z: playerCastle.z,
+              buildings: this.serializeBuildings(playerCastle.buildings),
+            }
+          : null,
+        enemyCastle: enemyCastle
+          ? {
+              x: enemyCastle.x,
+              y: enemyCastle.y,
+              z: enemyCastle.z,
+              buildings: this.serializeBuildings(enemyCastle.buildings),
+              discovered: enemyDiscovered,
+            }
+          : null,
         gameTime,
         dayTime,
       };
@@ -116,7 +139,11 @@ export class SaveSystem {
     for (let i = 0; i < data.inventory.slots.length && i < inventory.size; i++) {
       const slot = data.inventory.slots[i];
       if (slot) {
-        inventory.slots[i] = { itemId: slot.itemId, count: slot.count, durability: slot.durability };
+        inventory.slots[i] = {
+          itemId: slot.itemId,
+          count: slot.count,
+          durability: slot.durability,
+        };
       }
     }
     inventory.selectHotbar(data.inventory.selectedHotbar);
@@ -151,9 +178,13 @@ export class SaveSystem {
 
   private serializeBuildings(buildings: CastleBuilding[]): SerializedBuilding[] {
     return buildings.map((b) => ({
-      id: b.id, type: b.type,
-      x: b.x, y: b.y, z: b.z,
-      hp: b.hp, maxHp: b.maxHp,
+      id: b.id,
+      type: b.type,
+      x: b.x,
+      y: b.y,
+      z: b.z,
+      hp: b.hp,
+      maxHp: b.maxHp,
     }));
   }
 }

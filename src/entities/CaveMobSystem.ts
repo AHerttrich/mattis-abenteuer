@@ -7,7 +7,16 @@
  */
 
 import * as THREE from 'three';
-import { ECSWorld, Entity, createPosition, createVelocity, createHealth, createCombat, createTeam, createAI } from '../ecs';
+import {
+  ECSWorld,
+  Entity,
+  createPosition,
+  createVelocity,
+  createHealth,
+  createCombat,
+  createTeam,
+  createAI,
+} from '../ecs';
 import type { PositionComponent, HealthComponent, AIComponent } from '../ecs/Component';
 import { AIState } from '../ecs/Component';
 import { CombatSystem } from '../combat/CombatSystem';
@@ -20,9 +29,12 @@ export enum CaveMobType {
   SPIDER = 'spider',
 }
 
-const MOB_STATS: Record<string, { hp: number; damage: number; speed: number; range: number; color: number }> = {
+const MOB_STATS: Record<
+  string,
+  { hp: number; damage: number; speed: number; range: number; color: number }
+> = {
   [CaveMobType.SKELETON]: { hp: 30, damage: 6, speed: 2.5, range: 2.0, color: 0xccccaa },
-  [CaveMobType.SPIDER]:   { hp: 20, damage: 4, speed: 4.0, range: 1.5, color: 0x333333 },
+  [CaveMobType.SPIDER]: { hp: 20, damage: 4, speed: 4.0, range: 1.5, color: 0x333333 },
 };
 
 const MOB_DROPS: Record<string, { itemId: string; count: number; chance: number }[]> = {
@@ -57,7 +69,12 @@ export class CaveMobSystem {
   // Reward callback
   private dropCallback: ((drops: { itemId: string; count: number }[]) => void) | null = null;
 
-  constructor(ecsWorld: ECSWorld, scene: THREE.Scene, combat: CombatSystem, chunkManager: ChunkManager) {
+  constructor(
+    ecsWorld: ECSWorld,
+    scene: THREE.Scene,
+    combat: CombatSystem,
+    chunkManager: ChunkManager,
+  ) {
     this.ecsWorld = ecsWorld;
     this.scene = scene;
     this.combat = combat;
@@ -65,7 +82,7 @@ export class CaveMobSystem {
 
     eventBus.on(Events.ENTITY_DIED, (data: unknown) => {
       const { entityId } = data as { entityId: string };
-      const mobIdx = this.mobs.findIndex(m => m.entity.id === entityId);
+      const mobIdx = this.mobs.findIndex((m) => m.entity.id === entityId);
       if (mobIdx >= 0) {
         const mob = this.mobs[mobIdx];
         this.awardDrops(mob.type);
@@ -150,7 +167,10 @@ export class CaveMobSystem {
     const headY = Math.floor(py + 2);
     let hasRoof = false;
     for (let y = headY; y < headY + 10; y++) {
-      if (this.isSolidAt(Math.floor(px), y, Math.floor(pz))) { hasRoof = true; break; }
+      if (this.isSolidAt(Math.floor(px), y, Math.floor(pz))) {
+        hasRoof = true;
+        break;
+      }
     }
     if (!hasRoof) return;
 
@@ -168,7 +188,10 @@ export class CaveMobSystem {
     // Must be dark (underground)
     let roofAbove = false;
     for (let y = sy; y < sy + 10; y++) {
-      if (this.isSolidAt(sx, y, sz)) { roofAbove = true; break; }
+      if (this.isSolidAt(sx, y, sz)) {
+        roofAbove = true;
+        break;
+      }
     }
     if (!roofAbove) return;
 
@@ -206,7 +229,11 @@ export class CaveMobSystem {
 
     // Eyes (glowing red)
     const eyeGeo = new THREE.BoxGeometry(0.06, 0.06, 0.06);
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2 });
+    const eyeMat = new THREE.MeshStandardMaterial({
+      color: 0xff0000,
+      emissive: 0xff0000,
+      emissiveIntensity: 2,
+    });
     const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
     const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
     eye1.position.set(-0.1, bodyH * 0.7, bodyW / 2 + 0.01);
@@ -219,7 +246,7 @@ export class CaveMobSystem {
         for (let i = 0; i < 3; i++) {
           const leg = new THREE.Mesh(
             new THREE.BoxGeometry(0.04, 0.3, 0.04),
-            new THREE.MeshStandardMaterial({ color: 0x222222 })
+            new THREE.MeshStandardMaterial({ color: 0x222222 }),
           );
           leg.position.set(side * 0.45, 0.1, (i - 1) * 0.25);
           leg.rotation.z = side * 0.6;
@@ -235,7 +262,7 @@ export class CaveMobSystem {
   private removeMob(idx: number): void {
     const mob = this.mobs[idx];
     this.scene.remove(mob.mesh);
-    mob.mesh.traverse(child => {
+    mob.mesh.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
         (child.material as THREE.Material).dispose();
@@ -247,8 +274,8 @@ export class CaveMobSystem {
 
   private awardDrops(type: CaveMobType): void {
     const drops = (MOB_DROPS[type] ?? [])
-      .filter(d => Math.random() < d.chance)
-      .map(d => ({ itemId: d.itemId, count: d.count }));
+      .filter((d) => Math.random() < d.chance)
+      .map((d) => ({ itemId: d.itemId, count: d.count }));
     if (drops.length > 0 && this.dropCallback) {
       this.dropCallback(drops);
     }
@@ -260,11 +287,14 @@ export class CaveMobSystem {
   }
 
   private snapToGround(pos: PositionComponent): void {
-    const bx = Math.floor(pos.x), bz = Math.floor(pos.z);
+    const bx = Math.floor(pos.x),
+      bz = Math.floor(pos.z);
     let gy = Math.floor(pos.y);
     while (gy > 0 && !this.isSolidAt(bx, gy - 1, bz)) gy--;
     pos.y += (gy - pos.y) * 0.3;
   }
 
-  get mobCount(): number { return this.mobs.length; }
+  get mobCount(): number {
+    return this.mobs.length;
+  }
 }

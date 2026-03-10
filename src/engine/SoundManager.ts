@@ -132,8 +132,10 @@ export class SoundManager {
 
     osc.connect(gain).connect(this.masterGain);
     osc2.connect(gain);
-    osc.start(now); osc.stop(now + 0.15);
-    osc2.start(now + 0.1); osc2.stop(now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.15);
+    osc2.start(now + 0.1);
+    osc2.stop(now + 0.3);
   }
 
   /** Catapult launch — deep boom. */
@@ -158,8 +160,12 @@ export class SoundManager {
 
     osc.connect(gain).connect(this.masterGain);
     if (noise) noise.connect(filter).connect(gain);
-    osc.start(now); osc.stop(now + 0.5);
-    if (noise) { noise.start(now); noise.stop(now + 0.3); }
+    osc.start(now);
+    osc.stop(now + 0.5);
+    if (noise) {
+      noise.start(now);
+      noise.stop(now + 0.3);
+    }
   }
 
   /** Explosion impact — rumble. */
@@ -180,8 +186,12 @@ export class SoundManager {
 
     osc.connect(gain).connect(this.masterGain);
     if (noise) noise.connect(gain);
-    osc.start(now); osc.stop(now + 0.4);
-    if (noise) { noise.start(now); noise.stop(now + 0.4); }
+    osc.start(now);
+    osc.stop(now + 0.4);
+    if (noise) {
+      noise.start(now);
+      noise.stop(now + 0.4);
+    }
   }
 
   /** Victory fanfare — major chord arpeggio. */
@@ -244,7 +254,8 @@ export class SoundManager {
     gain.gain.setValueAtTime(0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
     osc.connect(gain).connect(this.masterGain);
-    osc.start(now); osc.stop(now + 0.1);
+    osc.start(now);
+    osc.stop(now + 0.1);
   }
 
   /** Shield block — metallic clunk. */
@@ -260,7 +271,8 @@ export class SoundManager {
     gain.gain.setValueAtTime(0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
     osc.connect(gain).connect(this.masterGain);
-    osc.start(now); osc.stop(now + 0.12);
+    osc.start(now);
+    osc.stop(now + 0.12);
   }
 
   /** Enemy death — low descending groan. */
@@ -276,7 +288,8 @@ export class SoundManager {
     gain.gain.setValueAtTime(0.15, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
     osc.connect(gain).connect(this.masterGain);
-    osc.start(now); osc.stop(now + 0.4);
+    osc.start(now);
+    osc.stop(now + 0.4);
   }
 
   /** War horn — wave incoming warning. */
@@ -295,7 +308,8 @@ export class SoundManager {
     gain.gain.setValueAtTime(0.3, now + 0.8);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
     osc.connect(gain).connect(this.masterGain);
-    osc.start(now); osc.stop(now + 1.2);
+    osc.start(now);
+    osc.stop(now + 1.2);
   }
 
   /** Wave cleared — triumphant chord. */
@@ -332,8 +346,12 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     osc.connect(gain).connect(this.masterGain);
     if (noise) noise.connect(gain);
-    osc.start(now); osc.stop(now + 0.15);
-    if (noise) { noise.start(now); noise.stop(now + 0.15); }
+    osc.start(now);
+    osc.stop(now + 0.15);
+    if (noise) {
+      noise.start(now);
+      noise.stop(now + 0.15);
+    }
   }
 
   /** Lava sizzle — hissing noise. */
@@ -350,7 +368,8 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
     if (noise) {
       noise.connect(filter).connect(gain).connect(this.masterGain);
-      noise.start(now); noise.stop(now + 0.3);
+      noise.start(now);
+      noise.stop(now + 0.3);
     }
   }
 
@@ -382,8 +401,10 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
     osc.connect(gain).connect(this.masterGain);
     osc2.connect(gain);
-    osc.start(now); osc.stop(now + 0.2);
-    osc2.start(now); osc2.stop(now + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
+    osc2.start(now);
+    osc2.stop(now + 0.2);
   }
 
   /** Sword swing — fast whoosh. */
@@ -400,7 +421,8 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
     if (noise) {
       noise.connect(filter).connect(gain).connect(this.masterGain);
-      noise.start(now); noise.stop(now + 0.08);
+      noise.start(now);
+      noise.stop(now + 0.08);
     }
   }
 
@@ -417,7 +439,8 @@ export class SoundManager {
     gain.gain.setValueAtTime(0.08, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
     osc.connect(gain).connect(this.masterGain);
-    osc.start(now); osc.stop(now + 0.1);
+    osc.start(now);
+    osc.stop(now + 0.1);
   }
 
   /** Cavalry charge — galloping thuds. */
@@ -434,7 +457,8 @@ export class SoundManager {
       gain.gain.setValueAtTime(0.15, now + i * 0.07);
       gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.07 + 0.05);
       osc.connect(gain).connect(this.masterGain);
-      osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.05);
+      osc.start(now + i * 0.07);
+      osc.stop(now + i * 0.07 + 0.05);
     }
   }
 
@@ -452,7 +476,8 @@ export class SoundManager {
     gain.gain.linearRampToValueAtTime(0.15, now + 0.3);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
     osc.connect(gain).connect(this.masterGain);
-    osc.start(now); osc.stop(now + 0.5);
+    osc.start(now);
+    osc.stop(now + 0.5);
   }
 
   setVolume(v: number): void {
@@ -460,8 +485,12 @@ export class SoundManager {
     if (this.masterGain) this.masterGain.gain.value = this.volume;
   }
 
-  toggle(): void { this.enabled = !this.enabled; }
-  get isEnabled(): boolean { return this.enabled; }
+  toggle(): void {
+    this.enabled = !this.enabled;
+  }
+  get isEnabled(): boolean {
+    return this.enabled;
+  }
 }
 
 export const soundManager = new SoundManager();

@@ -18,16 +18,23 @@ export class BlockHighlight {
 
     // Wireframe cube
     const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.005, 1.005, 1.005));
-    const mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: 0.6 });
+    const mat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      linewidth: 2,
+      transparent: true,
+      opacity: 0.6,
+    });
     this.wireframe = new THREE.LineSegments(edges, mat);
     this.wireframe.visible = false;
     scene.add(this.wireframe);
 
     // Mining progress bar (HTML overlay)
     this.progressBar = document.createElement('div');
-    this.progressBar.style.cssText = 'position:fixed;top:55%;left:50%;transform:translateX(-50%);width:120px;height:6px;background:rgba(0,0,0,0.6);border-radius:3px;z-index:110;display:none;';
+    this.progressBar.style.cssText =
+      'position:fixed;top:55%;left:50%;transform:translateX(-50%);width:120px;height:6px;background:rgba(0,0,0,0.6);border-radius:3px;z-index:110;display:none;';
     this.progressFill = document.createElement('div');
-    this.progressFill.style.cssText = 'height:100%;background:linear-gradient(90deg,#e67e22,#f1c40f);border-radius:3px;width:0%;transition:width 0.05s;';
+    this.progressFill.style.cssText =
+      'height:100%;background:linear-gradient(90deg,#e67e22,#f1c40f);border-radius:3px;width:0%;transition:width 0.05s;';
     this.progressBar.appendChild(this.progressFill);
     document.body.appendChild(this.progressBar);
   }
@@ -62,7 +69,9 @@ export class BlockHighlight {
     this.progressFill.style.width = '0%';
   }
 
-  get miningProgress(): number { return this._miningProgress; }
+  get miningProgress(): number {
+    return this._miningProgress;
+  }
 
   destroy(): void {
     this.scene.remove(this.wireframe);

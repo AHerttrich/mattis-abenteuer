@@ -165,11 +165,7 @@ export function createCombat(
   return { type: 'combat', damage, attackSpeed, range, lastAttackTime: 0, knockback };
 }
 
-export function createAI(
-  patrolRadius = 10,
-  alertRadius = 15,
-  chaseRadius = 25,
-): AIComponent {
+export function createAI(patrolRadius = 10, alertRadius = 15, chaseRadius = 25): AIComponent {
   return {
     type: 'ai',
     state: AIState.IDLE,

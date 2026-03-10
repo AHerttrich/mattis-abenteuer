@@ -41,15 +41,18 @@ export class AIStateMachine {
       case AIState.IDLE:
         if (ctx.targetCastleX !== undefined) return this.transition(ai, AIState.MARCH);
         if (ai.patrolOrigin) return this.transition(ai, AIState.PATROL);
-        if (enemyDist !== null && enemyDist < ai.alertRadius) return this.transition(ai, AIState.ALERT);
+        if (enemyDist !== null && enemyDist < ai.alertRadius)
+          return this.transition(ai, AIState.ALERT);
         return AIState.IDLE;
 
       case AIState.PATROL:
-        if (enemyDist !== null && enemyDist < ai.alertRadius) return this.transition(ai, AIState.ALERT);
+        if (enemyDist !== null && enemyDist < ai.alertRadius)
+          return this.transition(ai, AIState.ALERT);
         return AIState.PATROL;
 
       case AIState.ALERT:
-        if (enemyDist === null || enemyDist > ai.chaseRadius) return this.transition(ai, AIState.PATROL);
+        if (enemyDist === null || enemyDist > ai.chaseRadius)
+          return this.transition(ai, AIState.PATROL);
         if (enemyDist < ai.chaseRadius) return this.transition(ai, AIState.CHASE);
         return AIState.ALERT;
 
@@ -62,15 +65,24 @@ export class AIStateMachine {
       case AIState.ATTACK:
         if (ctx.health.current < ctx.health.max * 0.2) return this.transition(ai, AIState.FLEE);
         // Archers kite: retreat if enemy gets too close
-        if (ctx.isArcher && enemyDist !== null && enemyDist < 4) return this.transition(ai, AIState.RETREAT);
+        if (ctx.isArcher && enemyDist !== null && enemyDist < 4)
+          return this.transition(ai, AIState.RETREAT);
         // Catapults retreat if enemy gets too close
-        if (ctx.warriorType === WarriorType.CATAPULT_OPERATOR && enemyDist !== null && enemyDist < 10) return this.transition(ai, AIState.RETREAT);
-        if (enemyDist === null || enemyDist > ctx.attackRange) return this.transition(ai, AIState.CHASE);
+        if (
+          ctx.warriorType === WarriorType.CATAPULT_OPERATOR &&
+          enemyDist !== null &&
+          enemyDist < 10
+        )
+          return this.transition(ai, AIState.RETREAT);
+        if (enemyDist === null || enemyDist > ctx.attackRange)
+          return this.transition(ai, AIState.CHASE);
         return AIState.ATTACK;
 
       case AIState.MARCH:
-        if (enemyDist !== null && enemyDist < ctx.attackRange) return this.transition(ai, AIState.ATTACK);
-        if (enemyDist !== null && enemyDist < ai.alertRadius) return this.transition(ai, AIState.CHASE);
+        if (enemyDist !== null && enemyDist < ctx.attackRange)
+          return this.transition(ai, AIState.ATTACK);
+        if (enemyDist !== null && enemyDist < ai.alertRadius)
+          return this.transition(ai, AIState.CHASE);
         return AIState.MARCH;
 
       case AIState.FLEE:
@@ -79,7 +91,8 @@ export class AIStateMachine {
 
       case AIState.RETREAT:
         // Archers/catapults back off then re-engage
-        if (enemyDist === null || enemyDist >= (ctx.isArcher ? 8 : 15)) return this.transition(ai, AIState.ATTACK);
+        if (enemyDist === null || enemyDist >= (ctx.isArcher ? 8 : 15))
+          return this.transition(ai, AIState.ATTACK);
         return AIState.RETREAT;
 
       default:

@@ -4,11 +4,32 @@
  */
 
 import * as THREE from 'three';
-import { ECSWorld, Entity, createPosition, createVelocity, createHealth, createCombat, createTeam, createAI, createWarrior } from '../ecs';
+import {
+  ECSWorld,
+  Entity,
+  createPosition,
+  createVelocity,
+  createHealth,
+  createCombat,
+  createTeam,
+  createAI,
+  createWarrior,
+} from '../ecs';
 import { AIState, WarriorType } from '../ecs/Component';
-import type { PositionComponent, HealthComponent, AIComponent, TeamComponent } from '../ecs/Component';
+import type {
+  PositionComponent,
+  HealthComponent,
+  AIComponent,
+  TeamComponent,
+} from '../ecs/Component';
 import { CombatSystem } from '../combat/CombatSystem';
-import { eventBus, Events, GUARD_PATROL_RADIUS, GUARD_ALERT_RADIUS, GUARD_CHASE_RADIUS } from '../utils';
+import {
+  eventBus,
+  Events,
+  GUARD_PATROL_RADIUS,
+  GUARD_ALERT_RADIUS,
+  GUARD_CHASE_RADIUS,
+} from '../utils';
 import { AIStateMachine } from '../ai/AIStateMachine';
 import type { AIContext } from '../ai/AIStateMachine';
 import { PathFinder } from '../ai/PathFinder';
@@ -30,7 +51,11 @@ interface WarriorMesh {
 }
 
 /** Create a canvas-based floating health bar sprite */
-function createHealthBarSprite(): { sprite: THREE.Sprite; canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
+function createHealthBarSprite(): {
+  sprite: THREE.Sprite;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+} {
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 8;
@@ -53,14 +78,15 @@ const WARRIOR_COLORS: Record<string, { player: number; enemy: number }> = {
   [WarriorType.CASTLE_BOSS]: { player: 0xffd700, enemy: 0x300030 },
 };
 
-const WARRIOR_STATS: Record<string, { hp: number; damage: number; speed: number; range: number }> = {
-  [WarriorType.SWORDSMAN]: { hp: 60, damage: 8, speed: 3.0, range: 2.0 },
-  [WarriorType.ARCHER]: { hp: 40, damage: 6, speed: 3.5, range: 12.0 },
-  [WarriorType.CAVALRY]: { hp: 80, damage: 12, speed: 5.0, range: 2.5 },
-  [WarriorType.CATAPULT_OPERATOR]: { hp: 50, damage: 25, speed: 1.5, range: 30.0 },
-  [WarriorType.SHIELD_BEARER]: { hp: 120, damage: 6, speed: 2.0, range: 2.0 },
-  [WarriorType.CASTLE_BOSS]: { hp: 500, damage: 20, speed: 2.5, range: 3.5 },
-};
+const WARRIOR_STATS: Record<string, { hp: number; damage: number; speed: number; range: number }> =
+  {
+    [WarriorType.SWORDSMAN]: { hp: 60, damage: 8, speed: 3.0, range: 2.0 },
+    [WarriorType.ARCHER]: { hp: 40, damage: 6, speed: 3.5, range: 12.0 },
+    [WarriorType.CAVALRY]: { hp: 80, damage: 12, speed: 5.0, range: 2.5 },
+    [WarriorType.CATAPULT_OPERATOR]: { hp: 50, damage: 25, speed: 1.5, range: 30.0 },
+    [WarriorType.SHIELD_BEARER]: { hp: 120, damage: 6, speed: 2.0, range: 2.0 },
+    [WarriorType.CASTLE_BOSS]: { hp: 500, damage: 20, speed: 2.5, range: 3.5 },
+  };
 
 export class WarriorManager {
   private ecsWorld: ECSWorld;
@@ -72,12 +98,20 @@ export class WarriorManager {
   private playerCastlePos: { x: number; z: number } | null = null;
   private chunkManager: ChunkManager;
   private pathFinder: PathFinder;
-  private paths = new Map<string, { waypoints: { x: number; y: number; z: number }[]; index: number; repathTimer: number }>();
+  private paths = new Map<
+    string,
+    { waypoints: { x: number; y: number; z: number }[]; index: number; repathTimer: number }
+  >();
   private lastPositions = new Map<string, { x: number; z: number; stuckTimer: number }>();
   private formationSlotCounter = new Map<string, number>(); // team → next slot index
   private lastSoundTime = new Map<string, number>(); // entityId → last sound time
 
-  constructor(ecsWorld: ECSWorld, scene: THREE.Scene, combat: CombatSystem, chunkManager: ChunkManager) {
+  constructor(
+    ecsWorld: ECSWorld,
+    scene: THREE.Scene,
+    combat: CombatSystem,
+    chunkManager: ChunkManager,
+  ) {
     this.ecsWorld = ecsWorld;
     this.scene = scene;
     this.combat = combat;
@@ -94,11 +128,23 @@ export class WarriorManager {
     });
   }
 
-  setEnemyCastlePos(x: number, z: number): void { this.enemyCastlePos = { x, z }; }
-  setPlayerCastlePos(x: number, z: number): void { this.playerCastlePos = { x, z }; }
+  setEnemyCastlePos(x: number, z: number): void {
+    this.enemyCastlePos = { x, z };
+  }
+  setPlayerCastlePos(x: number, z: number): void {
+    this.playerCastlePos = { x, z };
+  }
 
   /** Spawn a warrior entity with 3D mesh. */
-  spawnWarrior(type: WarriorType, team: 'player' | 'enemy', x: number, y: number, z: number, sourceCastleId: string, targetCastleId: string): Entity {
+  spawnWarrior(
+    type: WarriorType,
+    team: 'player' | 'enemy',
+    x: number,
+    y: number,
+    z: number,
+    sourceCastleId: string,
+    targetCastleId: string,
+  ): Entity {
     const stats = WARRIOR_STATS[type];
     const colors = WARRIOR_COLORS[type];
     const color = team === 'player' ? colors.player : colors.enemy;
@@ -117,7 +163,9 @@ export class WarriorManager {
       .addComponent(createCombat(stats.damage, 1.0, stats.range))
       .addComponent(createTeam(team))
       .addComponent(createAI(GUARD_PATROL_RADIUS, GUARD_ALERT_RADIUS, GUARD_CHASE_RADIUS))
-      .addComponent(createWarrior(type, sourceCastleId, targetCastleId, this.nextFormationSlot(team)));
+      .addComponent(
+        createWarrior(type, sourceCastleId, targetCastleId, this.nextFormationSlot(team)),
+      );
 
     // Set AI initial state
     const ai = entity.getComponent<AIComponent>('ai')!;
@@ -133,12 +181,19 @@ export class WarriorManager {
     return entity;
   }
 
-  private createMesh(entityId: string, color: number, type: WarriorType, team: 'player' | 'enemy'): void {
+  private createMesh(
+    entityId: string,
+    color: number,
+    type: WarriorType,
+    team: 'player' | 'enemy',
+  ): void {
     const group = new THREE.Group();
 
     // Body dimensions vary by type
-    const bodyW = type === WarriorType.SHIELD_BEARER ? 0.6 : type === WarriorType.ARCHER ? 0.4 : 0.5;
-    const bodyH = type === WarriorType.CAVALRY ? 1.2 : type === WarriorType.CATAPULT_OPERATOR ? 0.7 : 0.9;
+    const bodyW =
+      type === WarriorType.SHIELD_BEARER ? 0.6 : type === WarriorType.ARCHER ? 0.4 : 0.5;
+    const bodyH =
+      type === WarriorType.CAVALRY ? 1.2 : type === WarriorType.CATAPULT_OPERATOR ? 0.7 : 0.9;
     const bodyD = type === WarriorType.SHIELD_BEARER ? 0.5 : 0.4;
     const bodyGeo = new THREE.BoxGeometry(bodyW, bodyH, bodyD);
     const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
@@ -157,7 +212,11 @@ export class WarriorManager {
 
     // Eye dots (two small white cubes on front of head)
     const eyeGeo = new THREE.BoxGeometry(0.06, 0.06, 0.02);
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.3 });
+    const eyeMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.3,
+    });
     const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
     leftEye.position.set(-0.08, bodyH + 0.32, 0.18);
     group.add(leftEye);
@@ -208,7 +267,12 @@ export class WarriorManager {
 
     const flagGeo = new THREE.PlaneGeometry(0.35, 0.25);
     const flagColor = team === 'player' ? 0x2040c0 : 0xc02020;
-    const flagMat = new THREE.MeshStandardMaterial({ color: flagColor, side: THREE.DoubleSide, emissive: new THREE.Color(flagColor), emissiveIntensity: 0.15 });
+    const flagMat = new THREE.MeshStandardMaterial({
+      color: flagColor,
+      side: THREE.DoubleSide,
+      emissive: new THREE.Color(flagColor),
+      emissiveIntensity: 0.15,
+    });
     const flag = new THREE.Mesh(flagGeo, flagMat);
     flag.position.set(0.18, bodyH + 1.3, -0.2);
     group.add(flag);
@@ -282,7 +346,7 @@ export class WarriorManager {
     if (type === WarriorType.CAVALRY) {
       // Horse body underneath rider
       const horseGeo = new THREE.BoxGeometry(0.5, 0.6, 1.0);
-      const horseMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+      const horseMat = new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.9 });
       const horse = new THREE.Mesh(horseGeo, horseMat);
       horse.position.set(0, 0.3, 0.1);
       group.add(horse);
@@ -293,7 +357,12 @@ export class WarriorManager {
       group.add(hHead);
       // Horse legs
       const hLegGeo = new THREE.BoxGeometry(0.1, 0.3, 0.1);
-      for (const [lx, lz] of [[-0.2, -0.35], [0.2, -0.35], [-0.2, 0.35], [0.2, 0.35]]) {
+      for (const [lx, lz] of [
+        [-0.2, -0.35],
+        [0.2, -0.35],
+        [-0.2, 0.35],
+        [0.2, 0.35],
+      ]) {
         const hLeg = new THREE.Mesh(hLegGeo, horseMat);
         hLeg.position.set(lx, 0, lz + 0.1);
         group.add(hLeg);
@@ -320,7 +389,12 @@ export class WarriorManager {
       group.scale.set(1.8, 1.8, 1.8);
       // Crown on head
       const crownGeo = new THREE.BoxGeometry(0.4, 0.12, 0.4);
-      const crownMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: new THREE.Color(0xffd700), emissiveIntensity: 0.5, metalness: 0.8 });
+      const crownMat = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        emissive: new THREE.Color(0xffd700),
+        emissiveIntensity: 0.5,
+        metalness: 0.8,
+      });
       const crown = new THREE.Mesh(crownGeo, crownMat);
       crown.position.set(0, bodyH + 0.55, 0);
       group.add(crown);
@@ -350,9 +424,20 @@ export class WarriorManager {
 
     this.scene.add(group);
     const hpBar = createHealthBarSprite();
-    hpBar.sprite.position.y = (type === WarriorType.CASTLE_BOSS ? 3.5 : 1.7);
+    hpBar.sprite.position.y = type === WarriorType.CASTLE_BOSS ? 3.5 : 1.7;
     group.add(hpBar.sprite);
-    this.meshes.set(entityId, { group, body, head, leftArm, rightArm, leftLeg, rightLeg, healthBar: hpBar.sprite, healthBarCanvas: hpBar.canvas, healthBarCtx: hpBar.ctx });
+    this.meshes.set(entityId, {
+      group,
+      body,
+      head,
+      leftArm,
+      rightArm,
+      leftLeg,
+      rightLeg,
+      healthBar: hpBar.sprite,
+      healthBarCanvas: hpBar.canvas,
+      healthBarCtx: hpBar.ctx,
+    });
   }
 
   /** Update all warriors — AI decisions, movement, and combat. */
@@ -369,7 +454,9 @@ export class WarriorManager {
 
       // Find nearest enemy
       const nearestEnemy = this.combat.findNearestEnemy(warrior, ai.chaseRadius);
-      const enemyDist = nearestEnemy ? this.dist(pos, nearestEnemy.getComponent<PositionComponent>('position')!) : null;
+      const enemyDist = nearestEnemy
+        ? this.dist(pos, nearestEnemy.getComponent<PositionComponent>('position')!)
+        : null;
 
       // Target castle position
       const targetCastle = team.team === 'player' ? this.enemyCastlePos : this.playerCastlePos;
@@ -378,11 +465,19 @@ export class WarriorManager {
       const homeCastle = team.team === 'player' ? this.playerCastlePos : this.enemyCastlePos;
 
       // AI update
-      const combatComp = warrior.getComponent<import('../ecs/Component').CombatComponent>('combat')!
+      const combatComp =
+        warrior.getComponent<import('../ecs/Component').CombatComponent>('combat')!;
       const wComp = warrior.getComponent<import('../ecs/Component').WarriorComponent>('warrior')!;
-      const nearestEnemyPos = nearestEnemy ? { x: nearestEnemy.getComponent<PositionComponent>('position')!.x, z: nearestEnemy.getComponent<PositionComponent>('position')!.z } : undefined;
+      const nearestEnemyPos = nearestEnemy
+        ? {
+            x: nearestEnemy.getComponent<PositionComponent>('position')!.x,
+            z: nearestEnemy.getComponent<PositionComponent>('position')!.z,
+          }
+        : undefined;
       const ctx: AIContext = {
-        position: pos, ai, health,
+        position: pos,
+        ai,
+        health,
         attackRange: combatComp.range,
         nearestEnemyDist: enemyDist,
         nearestEnemyId: nearestEnemy?.id ?? null,
@@ -403,7 +498,13 @@ export class WarriorManager {
       const lastSound = this.lastSoundTime.get(warrior.id) ?? 0;
       if (now - lastSound > 2) {
         // State transition sounds
-        if (ai.state === AIState.CHASE && (prevState === AIState.IDLE || prevState === AIState.PATROL || prevState === AIState.MARCH || prevState === AIState.ALERT)) {
+        if (
+          ai.state === AIState.CHASE &&
+          (prevState === AIState.IDLE ||
+            prevState === AIState.PATROL ||
+            prevState === AIState.MARCH ||
+            prevState === AIState.ALERT)
+        ) {
           soundManager.playWarCry();
           this.lastSoundTime.set(warrior.id, now);
         } else if (ai.state === AIState.FLEE && prevState !== AIState.FLEE) {
@@ -420,21 +521,30 @@ export class WarriorManager {
 
       if (ai.state === AIState.MARCH && targetCastle) {
         const fOffset = this.getFormationOffset(wComp, pos, targetCastle);
-        this.moveToward(pos, warrior.id, targetCastle.x + fOffset.x, targetCastle.z + fOffset.z, speed, dt);
+        this.moveToward(
+          pos,
+          warrior.id,
+          targetCastle.x + fOffset.x,
+          targetCastle.z + fOffset.z,
+          speed,
+          dt,
+        );
       } else if (ai.state === AIState.CHASE && nearestEnemy) {
         const ePos = nearestEnemy.getComponent<PositionComponent>('position')!;
         this.moveToward(pos, warrior.id, ePos.x, ePos.z, speed, dt);
       } else if (ai.state === AIState.ATTACK && nearestEnemy) {
         if (wComp.warriorType === WarriorType.ARCHER) {
-          const combatState = warrior.getComponent<import('../ecs/Component').CombatComponent>('combat')!;
-          if (Date.now() / 1000 - combatState.lastAttackTime >= 1.5) { // 1.5s cooldown
+          const combatState =
+            warrior.getComponent<import('../ecs/Component').CombatComponent>('combat')!;
+          if (Date.now() / 1000 - combatState.lastAttackTime >= 1.5) {
+            // 1.5s cooldown
             combatState.lastAttackTime = Date.now() / 1000;
             const ePos = nearestEnemy.getComponent<PositionComponent>('position')!;
             eventBus.emit(Events.ARROW_FIRED, {
               from: { x: pos.x, y: pos.y + 0.5, z: pos.z },
               to: { x: ePos.x, y: ePos.y + 1, z: ePos.z },
               damage: combatState.damage,
-              team: team.team
+              team: team.team,
             });
             // Face target fully
             const angle = Math.atan2(ePos.x - pos.x, ePos.z - pos.z);
@@ -463,9 +573,17 @@ export class WarriorManager {
         } else if (nearestEnemy) {
           // Fallback: run away
           const ePos = nearestEnemy.getComponent<PositionComponent>('position')!;
-          const dx = pos.x - ePos.x, dz = pos.z - ePos.z;
+          const dx = pos.x - ePos.x,
+            dz = pos.z - ePos.z;
           const len = Math.sqrt(dx * dx + dz * dz) || 1;
-          this.moveToward(pos, warrior.id, pos.x + (dx / len) * 10, pos.z + (dz / len) * 10, speed * 1.2, dt);
+          this.moveToward(
+            pos,
+            warrior.id,
+            pos.x + (dx / len) * 10,
+            pos.z + (dz / len) * 10,
+            speed * 1.2,
+            dt,
+          );
         }
       } else if (ai.state === AIState.RETREAT && nearestEnemy) {
         // Kite: move away from nearest enemy (archers/catapults maintaining range)
@@ -473,7 +591,14 @@ export class WarriorManager {
         const dx = pos.x - ePos.x;
         const dz = pos.z - ePos.z;
         const len = Math.sqrt(dx * dx + dz * dz) || 1;
-        this.moveToward(pos, warrior.id, pos.x + (dx / len) * 10, pos.z + (dz / len) * 10, speed * 1.2, dt);
+        this.moveToward(
+          pos,
+          warrior.id,
+          pos.x + (dx / len) * 10,
+          pos.z + (dz / len) * 10,
+          speed * 1.2,
+          dt,
+        );
       }
 
       // Apply separation force (flocking) — push away from nearby same-team warriors
@@ -488,7 +613,12 @@ export class WarriorManager {
         mesh.group.position.set(pos.x, pos.y, pos.z);
 
         // Walk animation when moving
-        if (ai.state === AIState.MARCH || ai.state === AIState.CHASE || ai.state === AIState.FLEE || ai.state === AIState.RETREAT) {
+        if (
+          ai.state === AIState.MARCH ||
+          ai.state === AIState.CHASE ||
+          ai.state === AIState.FLEE ||
+          ai.state === AIState.RETREAT
+        ) {
           const walkCycle = Date.now() * 0.008;
           mesh.body.position.y = 0.55 + Math.sin(walkCycle) * 0.05;
           mesh.leftArm.rotation.x = Math.sin(walkCycle) * 0.6;
@@ -583,7 +713,15 @@ export class WarriorManager {
 
         // Face movement direction
         if (ai.state !== AIState.IDLE) {
-          const target = ai.state === AIState.MARCH && targetCastle ? targetCastle : nearestEnemy ? { x: nearestEnemy.getComponent<PositionComponent>('position')!.x, z: nearestEnemy.getComponent<PositionComponent>('position')!.z } : null;
+          const target =
+            ai.state === AIState.MARCH && targetCastle
+              ? targetCastle
+              : nearestEnemy
+                ? {
+                    x: nearestEnemy.getComponent<PositionComponent>('position')!.x,
+                    z: nearestEnemy.getComponent<PositionComponent>('position')!.z,
+                  }
+                : null;
           if (target) {
             const angle = Math.atan2(target.x - pos.x, target.z - pos.z);
             mesh.group.rotation.y = angle;
@@ -600,8 +738,10 @@ export class WarriorManager {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, w, h);
         // HP fill
-        const barColor = hpRatio > 0.5 ? `rgb(${Math.round(255 * (1 - hpRatio) * 2)},${Math.round(200 + 55 * hpRatio)},60)`
-          : `rgb(255,${Math.round(200 * hpRatio * 2)},30)`;
+        const barColor =
+          hpRatio > 0.5
+            ? `rgb(${Math.round(255 * (1 - hpRatio) * 2)},${Math.round(200 + 55 * hpRatio)},60)`
+            : `rgb(255,${Math.round(200 * hpRatio * 2)},30)`;
         ctx.fillStyle = barColor;
         ctx.fillRect(1, 1, (w - 2) * hpRatio, h - 2);
         // Border
@@ -641,9 +781,13 @@ export class WarriorManager {
         const ePos = e.getComponent<PositionComponent>('position')!;
         const eHp = e.getComponent<HealthComponent>('health')!;
         if (eHp.isDead) continue;
-        const dx = ePos.x - bld.x, dz = ePos.z - bld.z;
+        const dx = ePos.x - bld.x,
+          dz = ePos.z - bld.z;
         const d = Math.sqrt(dx * dx + dz * dz);
-        if (d < closestDist) { closestDist = d; closest = { x: ePos.x, y: ePos.y + 1, z: ePos.z }; }
+        if (d < closestDist) {
+          closestDist = d;
+          closest = { x: ePos.x, y: ePos.y + 1, z: ePos.z };
+        }
       }
 
       if (closest) {
@@ -660,7 +804,8 @@ export class WarriorManager {
 
   /** Find terrain height at a given XZ by scanning downward. */
   private getTerrainY(x: number, z: number): number {
-    const bx = Math.floor(x), bz = Math.floor(z);
+    const bx = Math.floor(x),
+      bz = Math.floor(z);
     // Scan down from a generous height
     for (let y = 60; y > 0; y--) {
       if (this.isSolidAt(bx, y, bz) && !this.isSolidAt(bx, y + 1, bz)) {
@@ -670,7 +815,14 @@ export class WarriorManager {
     return 0;
   }
 
-  private moveToward(pos: PositionComponent, entityId: string, tx: number, tz: number, speed: number, dt: number): void {
+  private moveToward(
+    pos: PositionComponent,
+    entityId: string,
+    tx: number,
+    tz: number,
+    speed: number,
+    dt: number,
+  ): void {
     // ── Stuck detection ─────────────────────────────────────────
     let lastPos = this.lastPositions.get(entityId);
     if (!lastPos) {
@@ -693,8 +845,12 @@ export class WarriorManager {
       // Use actual terrain height as goal Y instead of start Y
       const goalY = this.getTerrainY(tx, tz);
       const path = this.pathFinder.findPath(
-        Math.floor(pos.x), Math.floor(pos.y), Math.floor(pos.z),
-        Math.floor(tx), goalY, Math.floor(tz)
+        Math.floor(pos.x),
+        Math.floor(pos.y),
+        Math.floor(pos.z),
+        Math.floor(tx),
+        goalY,
+        Math.floor(tz),
       );
       if (path && path.length > 1) {
         pathData = { waypoints: path, index: 1, repathTimer: 3.0 };
@@ -720,8 +876,8 @@ export class WarriorManager {
         return;
       }
 
-      const dx = (wp.x + 0.5) - pos.x;
-      const dz = (wp.z + 0.5) - pos.z;
+      const dx = wp.x + 0.5 - pos.x;
+      const dz = wp.z + 0.5 - pos.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
 
       if (dist < 0.3) {
@@ -735,8 +891,10 @@ export class WarriorManager {
 
         // Check movement won't go inside a solid block
         const by = Math.floor(pos.y);
-        if (!this.isSolidAt(Math.floor(nextX), by, Math.floor(nextZ)) &&
-            !this.isSolidAt(Math.floor(nextX), by + 1, Math.floor(nextZ))) {
+        if (
+          !this.isSolidAt(Math.floor(nextX), by, Math.floor(nextZ)) &&
+          !this.isSolidAt(Math.floor(nextX), by + 1, Math.floor(nextZ))
+        ) {
           pos.x = nextX;
           pos.z = nextZ;
         } else {
@@ -766,20 +924,25 @@ export class WarriorManager {
     const feetY = Math.floor(pos.y);
     const headY = feetY + 1;
     // Move X axis if not blocked
-    if (!this.isSolidAt(Math.floor(nx), feetY, Math.floor(pos.z)) &&
-        !this.isSolidAt(Math.floor(nx), headY, Math.floor(pos.z))) {
+    if (
+      !this.isSolidAt(Math.floor(nx), feetY, Math.floor(pos.z)) &&
+      !this.isSolidAt(Math.floor(nx), headY, Math.floor(pos.z))
+    ) {
       pos.x = nx;
     }
     // Move Z axis if not blocked
-    if (!this.isSolidAt(Math.floor(pos.x), feetY, Math.floor(nz)) &&
-        !this.isSolidAt(Math.floor(pos.x), headY, Math.floor(nz))) {
+    if (
+      !this.isSolidAt(Math.floor(pos.x), feetY, Math.floor(nz)) &&
+      !this.isSolidAt(Math.floor(pos.x), headY, Math.floor(nz))
+    ) {
       pos.z = nz;
     }
   }
 
   /** Apply gravity — snap warrior to terrain surface each frame */
   private applyGravity(pos: PositionComponent): void {
-    const bx = Math.floor(pos.x), bz = Math.floor(pos.z);
+    const bx = Math.floor(pos.x),
+      bz = Math.floor(pos.z);
     // Find ground: check downward from current pos
     let gy = Math.floor(pos.y);
     // If inside solid, push up
@@ -816,17 +979,29 @@ export class WarriorManager {
 
     // Lateral offset from formation slot (±1.5 blocks, alternating sides)
     const slot = wComp.formationSlot;
-    const lateral = ((slot % 2 === 0 ? 1 : -1) * Math.ceil(slot / 2)) * 1.5;
+    const lateral = (slot % 2 === 0 ? 1 : -1) * Math.ceil(slot / 2) * 1.5;
 
     // Depth offset based on warrior type (relative to march direction)
     let depth = 0;
     switch (wComp.warriorType) {
-      case WarriorType.SHIELD_BEARER: depth = 3; break;   // front row
-      case WarriorType.SWORDSMAN: depth = 0; break;        // middle
-      case WarriorType.ARCHER: depth = -4; break;          // back row
-      case WarriorType.CAVALRY: depth = 1; break;          // slightly forward, flanks handled by wider lateral
-      case WarriorType.CATAPULT_OPERATOR: depth = -6; break; // far back
-      case WarriorType.CASTLE_BOSS: depth = 2; break;      // front-ish
+      case WarriorType.SHIELD_BEARER:
+        depth = 3;
+        break; // front row
+      case WarriorType.SWORDSMAN:
+        depth = 0;
+        break; // middle
+      case WarriorType.ARCHER:
+        depth = -4;
+        break; // back row
+      case WarriorType.CAVALRY:
+        depth = 1;
+        break; // slightly forward, flanks handled by wider lateral
+      case WarriorType.CATAPULT_OPERATOR:
+        depth = -6;
+        break; // far back
+      case WarriorType.CASTLE_BOSS:
+        depth = 2;
+        break; // front-ish
     }
 
     return {
@@ -836,10 +1011,16 @@ export class WarriorManager {
   }
 
   /** Apply boid-style separation force — push apart nearby same-team warriors. */
-  private applySeparation(pos: PositionComponent, entityId: string, team: string, dt: number): void {
+  private applySeparation(
+    pos: PositionComponent,
+    entityId: string,
+    team: string,
+    dt: number,
+  ): void {
     const SEPARATION_RADIUS = 1.5;
     const SEPARATION_FORCE = 2.0;
-    let pushX = 0, pushZ = 0;
+    let pushX = 0,
+      pushZ = 0;
 
     const warriors = this.ecsWorld.query('position', 'health', 'team');
     for (const other of warriors) {
@@ -882,7 +1063,8 @@ export class WarriorManager {
       const duration = 600; // ms
 
       // Calculate knockback direction (away from killer)
-      let kbX = 0, kbZ = 0;
+      let kbX = 0,
+        kbZ = 0;
       if (killerPos) {
         const dx = mesh.group.position.x - killerPos.x;
         const dz = mesh.group.position.z - killerPos.z;
@@ -947,18 +1129,43 @@ export class WarriorManager {
   }
 
   private dist(a: PositionComponent, b: PositionComponent): number {
-    const dx = a.x - b.x, dz = a.z - b.z;
+    const dx = a.x - b.x,
+      dz = a.z - b.z;
     return Math.sqrt(dx * dx + dz * dz);
   }
 
-  get warriorCount(): number { return this.meshes.size; }
+  get warriorCount(): number {
+    return this.meshes.size;
+  }
 
   // ── Network sync (co-op multiplayer) ─────────────────────────
 
   /** Host: serialize all warrior positions/health for network broadcast. */
-  getAllWarriorState(): { id: string; type: string; team: string; x: number; y: number; z: number; rotY: number; hp: number; maxHp: number; state: string }[] {
+  getAllWarriorState(): {
+    id: string;
+    type: string;
+    team: string;
+    x: number;
+    y: number;
+    z: number;
+    rotY: number;
+    hp: number;
+    maxHp: number;
+    state: string;
+  }[] {
     const warriors = this.ecsWorld.query('position', 'health', 'ai', 'warrior', 'team');
-    const result: { id: string; type: string; team: string; x: number; y: number; z: number; rotY: number; hp: number; maxHp: number; state: string }[] = [];
+    const result: {
+      id: string;
+      type: string;
+      team: string;
+      x: number;
+      y: number;
+      z: number;
+      rotY: number;
+      hp: number;
+      maxHp: number;
+      state: string;
+    }[] = [];
     for (const w of warriors) {
       const pos = w.getComponent<PositionComponent>('position')!;
       const health = w.getComponent<HealthComponent>('health')!;
@@ -971,7 +1178,9 @@ export class WarriorManager {
         id: w.id,
         type: warrior.warriorType,
         team: team.team,
-        x: pos.x, y: pos.y, z: pos.z,
+        x: pos.x,
+        y: pos.y,
+        z: pos.z,
         rotY: mesh?.group.rotation.y ?? 0,
         hp: health.current,
         maxHp: health.max,
@@ -982,7 +1191,20 @@ export class WarriorManager {
   }
 
   /** Guest: update warrior meshes from host network data (rendering only). */
-  updateFromNetwork(warriors: { id: string; type: string; team: string; x: number; y: number; z: number; rotY: number; hp: number; maxHp: number; state: string }[]): void {
+  updateFromNetwork(
+    warriors: {
+      id: string;
+      type: string;
+      team: string;
+      x: number;
+      y: number;
+      z: number;
+      rotY: number;
+      hp: number;
+      maxHp: number;
+      state: string;
+    }[],
+  ): void {
     const receivedIds = new Set<string>();
 
     for (const w of warriors) {

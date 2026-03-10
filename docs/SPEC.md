@@ -308,7 +308,7 @@ Optimizes voxel rendering by combining adjacent same-type faces into larger quad
 | Effects | ✅ Working | Particles, sky dome, torch lights, weather, procedural Web Audio |
 | Achievements | ✅ Working | 18 milestones with toast notifications and death screen stats |
 | Village NPCs | ✅ Working | 4 professions, trade tables, recruitment, wander AI, 3D meshes |
-| Base Build View | ✅ Working | 2D canvas map, rearrange, demolish 50% refund, compass, tooltips |
+| Base Build View | ✅ Working | 2D canvas map, fit-all zoom, rearrange, demolish 50% refund, compass, tooltips |
 | Inventory UX | ✅ Working | Drag & drop, tooltips, split stack, rich item info |
 | XP & Progression | ✅ Working | XP from kills/mining/crafting/quests, level-up stat bonuses |
 | Farming | ✅ Working | 4 crops, growth stages, water bonus, harvest loot |
@@ -318,3 +318,7 @@ Optimizes voxel rendering by combining adjacent same-type faces into larger quad
 | Mounts | ✅ Working | Horses near villages, R-key mount/dismount, 2.5× speed |
 | Ambient Sounds | ✅ Working | 7 biome-based sounds via Web Audio synthesis |
 | Item Registry | ✅ Working | 75+ items (blocks, tools, weapons, armor, food, potions, dungeon loot) |
+| Visual Pipeline | ✅ Working | Bloom, ACES tone mapping, per-vertex AO, height fog, wind animation, animated lava, underwater tint, dynamic crosshair, enhanced start screen |
+| Weather System | ✅ Working | Per-biome rain/snow particles with smooth intensity transitions |
+| Fighter Identity | ✅ Working | Team pennant flags, per-type body shapes (quiver, horse, cart, crown), shoulder plates, eye dots |
+| Castle Visuals | ✅ Working | Type-specific 3D buildings: barracks (beds, weapon racks), archery range (open-air, targets), stable (fence, hay), siege workshop (iron, anvil) |

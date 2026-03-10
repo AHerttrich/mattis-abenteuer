@@ -65,8 +65,10 @@ export class Minimap {
     ctx.lineWidth = 0.5;
     for (let i = 0; i < this.size; i += 20) {
       ctx.beginPath();
-      ctx.moveTo(i, 0); ctx.lineTo(i, this.size);
-      ctx.moveTo(0, i); ctx.lineTo(this.size, i);
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, this.size);
+      ctx.moveTo(0, i);
+      ctx.lineTo(this.size, i);
       ctx.stroke();
     }
 
@@ -136,5 +138,7 @@ export class Minimap {
     ctx.strokeRect(0, 0, this.size, this.size);
   }
 
-  destroy(): void { this.canvas.remove(); }
+  destroy(): void {
+    this.canvas.remove();
+  }
 }

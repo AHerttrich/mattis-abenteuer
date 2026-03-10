@@ -56,11 +56,7 @@ export class Chunk {
    * Check if local coordinates are within chunk bounds.
    */
   inBounds(x: number, y: number, z: number): boolean {
-    return (
-      x >= 0 && x < CHUNK_SIZE &&
-      y >= 0 && y < CHUNK_HEIGHT &&
-      z >= 0 && z < CHUNK_SIZE
-    );
+    return x >= 0 && x < CHUNK_SIZE && y >= 0 && y < CHUNK_HEIGHT && z >= 0 && z < CHUNK_SIZE;
   }
 
   /**
@@ -104,8 +100,12 @@ export class Chunk {
    * Fill a range of blocks with a type.
    */
   fillRange(
-    x1: number, y1: number, z1: number,
-    x2: number, y2: number, z2: number,
+    x1: number,
+    y1: number,
+    z1: number,
+    x2: number,
+    y2: number,
+    z2: number,
     type: BlockType,
   ): void {
     const minX = Math.max(0, Math.min(x1, x2));

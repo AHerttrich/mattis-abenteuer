@@ -15,37 +15,95 @@ import type { WorldGenerator } from './WorldGenerator';
 
 /** Biome color tint multipliers: [r, g, b] */
 const BIOME_TINTS: Record<string, [number, number, number]> = {
-  forest:   [0.85, 1.1, 0.85],  // deep rich green
-  plains:   [1.1, 1.1, 0.8],   // golden-green
-  desert:   [1.1, 1.05, 0.9],  // warm sandy
-  tundra:   [0.9, 0.95, 1.1],  // cool blue
-  swamp:    [0.8, 0.95, 0.7],  // murky brownish
+  forest: [0.85, 1.1, 0.85], // deep rich green
+  plains: [1.1, 1.1, 0.8], // golden-green
+  desert: [1.1, 1.05, 0.9], // warm sandy
+  tundra: [0.9, 0.95, 1.1], // cool blue
+  swamp: [0.8, 0.95, 0.7], // murky brownish
   mountain: [0.95, 0.95, 1.0], // neutral cool
 };
 
 /** Block types affected by biome tinting */
 function isBiomeTinted(block: BlockType): boolean {
-  return block === BlockType.GRASS || block === BlockType.DIRT ||
-    block === BlockType.LEAVES_OAK || block === BlockType.LEAVES_BIRCH ||
-    block === BlockType.CLAY;
+  return (
+    block === BlockType.GRASS ||
+    block === BlockType.DIRT ||
+    block === BlockType.LEAVES_OAK ||
+    block === BlockType.LEAVES_BIRCH ||
+    block === BlockType.CLAY
+  );
 }
 
 /** Face directions for neighbor checks */
 const FACES = [
-  { dir: [1, 0, 0], vertices: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]], normal: [1,0,0] },   // +X (right)
-  { dir: [-1, 0, 0], vertices: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]], normal: [-1,0,0] },  // -X (left)
-  { dir: [0, 1, 0], vertices: [[0,1,0],[0,1,1],[1,1,1],[1,1,0]], normal: [0,1,0] },    // +Y (top)
-  { dir: [0, -1, 0], vertices: [[0,0,1],[0,0,0],[1,0,0],[1,0,1]], normal: [0,-1,0] },  // -Y (bottom)
-  { dir: [0, 0, 1], vertices: [[0,0,1],[1,0,1],[1,1,1],[0,1,1]], normal: [0,0,1] },    // +Z (front)
-  { dir: [0, 0, -1], vertices: [[1,0,0],[0,0,0],[0,1,0],[1,1,0]], normal: [0,0,-1] },  // -Z (back)
+  {
+    dir: [1, 0, 0],
+    vertices: [
+      [1, 0, 0],
+      [1, 1, 0],
+      [1, 1, 1],
+      [1, 0, 1],
+    ],
+    normal: [1, 0, 0],
+  }, // +X (right)
+  {
+    dir: [-1, 0, 0],
+    vertices: [
+      [0, 0, 1],
+      [0, 1, 1],
+      [0, 1, 0],
+      [0, 0, 0],
+    ],
+    normal: [-1, 0, 0],
+  }, // -X (left)
+  {
+    dir: [0, 1, 0],
+    vertices: [
+      [0, 1, 0],
+      [0, 1, 1],
+      [1, 1, 1],
+      [1, 1, 0],
+    ],
+    normal: [0, 1, 0],
+  }, // +Y (top)
+  {
+    dir: [0, -1, 0],
+    vertices: [
+      [0, 0, 1],
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 0, 1],
+    ],
+    normal: [0, -1, 0],
+  }, // -Y (bottom)
+  {
+    dir: [0, 0, 1],
+    vertices: [
+      [0, 0, 1],
+      [1, 0, 1],
+      [1, 1, 1],
+      [0, 1, 1],
+    ],
+    normal: [0, 0, 1],
+  }, // +Z (front)
+  {
+    dir: [0, 0, -1],
+    vertices: [
+      [1, 0, 0],
+      [0, 0, 0],
+      [0, 1, 0],
+      [1, 1, 0],
+    ],
+    normal: [0, 0, -1],
+  }, // -Z (back)
 ];
 
 /** UV corners for face vertices (maps to 4 corners of the texture tile) */
 const FACE_UVS = [
-  [0, 0],  // bottom-left
-  [0, 1],  // top-left
-  [1, 1],  // top-right
-  [1, 0],  // bottom-right
+  [0, 0], // bottom-left
+  [0, 1], // top-left
+  [1, 1], // top-right
+  [1, 0], // bottom-right
 ];
 
 /**
@@ -54,7 +112,9 @@ const FACE_UVS = [
 function getBlockAt(
   chunk: Chunk,
   neighbors: Map<string, Chunk>,
-  x: number, y: number, z: number,
+  x: number,
+  y: number,
+  z: number,
 ): BlockType {
   if (y < 0 || y >= CHUNK_HEIGHT) return BlockType.AIR;
 
@@ -68,10 +128,20 @@ function getBlockAt(
   let lx = x;
   let lz = z;
 
-  if (x < 0) { ncx -= 1; lx = x + CHUNK_SIZE; }
-  else if (x >= CHUNK_SIZE) { ncx += 1; lx = x - CHUNK_SIZE; }
-  if (z < 0) { ncz -= 1; lz = z + CHUNK_SIZE; }
-  else if (z >= CHUNK_SIZE) { ncz += 1; lz = z - CHUNK_SIZE; }
+  if (x < 0) {
+    ncx -= 1;
+    lx = x + CHUNK_SIZE;
+  } else if (x >= CHUNK_SIZE) {
+    ncx += 1;
+    lx = x - CHUNK_SIZE;
+  }
+  if (z < 0) {
+    ncz -= 1;
+    lz = z + CHUNK_SIZE;
+  } else if (z >= CHUNK_SIZE) {
+    ncz += 1;
+    lz = z - CHUNK_SIZE;
+  }
 
   const neighborKey = `${ncx},${ncz}`;
   const neighbor = neighbors.get(neighborKey);
@@ -87,15 +157,21 @@ function getBlockAt(
  */
 function vertexAO(side1: boolean, side2: boolean, corner: boolean): number {
   // side1 and side2 are the two adjacent face neighbors, corner is the diagonal
-  if (side1 && side2) return 0.4;  // Both sides blocked → max occlusion
+  if (side1 && side2) return 0.4; // Both sides blocked → max occlusion
   const occluded = (side1 ? 1 : 0) + (side2 ? 1 : 0) + (corner ? 1 : 0);
-  return 1.0 - occluded * 0.2;  // 0 → 1.0, 1 → 0.8, 2 → 0.6, 3 → 0.4
+  return 1.0 - occluded * 0.2; // 0 → 1.0, 1 → 0.8, 2 → 0.6, 3 → 0.4
 }
 
 /**
  * Check if a block is solid (non-transparent) for AO purposes.
  */
-function isSolid(chunk: Chunk, neighbors: Map<string, Chunk>, x: number, y: number, z: number): boolean {
+function isSolid(
+  chunk: Chunk,
+  neighbors: Map<string, Chunk>,
+  x: number,
+  y: number,
+  z: number,
+): boolean {
   const block = getBlockAt(chunk, neighbors, x, y, z);
   return !isBlockTransparent(block);
 }
@@ -105,8 +181,11 @@ function isSolid(chunk: Chunk, neighbors: Map<string, Chunk>, x: number, y: numb
  * Returns array of 4 shade multipliers.
  */
 function calculateFaceAO(
-  chunk: Chunk, neighbors: Map<string, Chunk>,
-  x: number, y: number, z: number,
+  chunk: Chunk,
+  neighbors: Map<string, Chunk>,
+  x: number,
+  y: number,
+  z: number,
   faceDir: number[],
 ): number[] {
   const [dx, dy, dz] = faceDir;
@@ -115,17 +194,22 @@ function calculateFaceAO(
   let t1: number[], t2: number[];
   if (dy !== 0) {
     // Top/bottom face — tangents are X and Z
-    t1 = [1, 0, 0]; t2 = [0, 0, 1];
+    t1 = [1, 0, 0];
+    t2 = [0, 0, 1];
   } else if (dx !== 0) {
     // Left/right face — tangents are Z and Y
-    t1 = [0, 0, 1]; t2 = [0, 1, 0];
+    t1 = [0, 0, 1];
+    t2 = [0, 1, 0];
   } else {
     // Front/back face — tangents are X and Y
-    t1 = [1, 0, 0]; t2 = [0, 1, 0];
+    t1 = [1, 0, 0];
+    t2 = [0, 1, 0];
   }
 
   // Neighbor position on the face
-  const nx = x + dx, ny = y + dy, nz = z + dz;
+  const nx = x + dx,
+    ny = y + dy,
+    nz = z + dz;
 
   // Check 8 neighbors around the face normal
   const s00 = isSolid(chunk, neighbors, nx - t1[0] - t2[0], ny - t1[1] - t2[1], nz - t1[2] - t2[2]);
@@ -214,9 +298,14 @@ export function buildChunkMesh(
             }
 
             // Face-direction shading (subtle base, AO provides the depth)
-            const dirShade = face.normal[1] === -1 ? 0.75 :
-                              face.normal[1] === 1 ? 1.0 :
-                              face.normal[0] !== 0 ? 0.88 : 0.92;
+            const dirShade =
+              face.normal[1] === -1
+                ? 0.75
+                : face.normal[1] === 1
+                  ? 1.0
+                  : face.normal[0] !== 0
+                    ? 0.88
+                    : 0.92;
 
             // Combine direction shade with per-vertex AO
             const shade = dirShade * aoValues[vi];
@@ -241,14 +330,22 @@ export function buildChunkMesh(
           if (aoValues[0] + aoValues[2] > aoValues[1] + aoValues[3]) {
             // Standard triangulation
             indices.push(
-              vertexCount, vertexCount + 1, vertexCount + 2,
-              vertexCount, vertexCount + 2, vertexCount + 3,
+              vertexCount,
+              vertexCount + 1,
+              vertexCount + 2,
+              vertexCount,
+              vertexCount + 2,
+              vertexCount + 3,
             );
           } else {
             // Flipped triangulation
             indices.push(
-              vertexCount + 1, vertexCount + 2, vertexCount + 3,
-              vertexCount + 1, vertexCount + 3, vertexCount,
+              vertexCount + 1,
+              vertexCount + 2,
+              vertexCount + 3,
+              vertexCount + 1,
+              vertexCount + 3,
+              vertexCount,
             );
           }
           vertexCount += 4;
@@ -264,7 +361,10 @@ export function buildChunkMesh(
   geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geometry.setAttribute('aEmissiveStrength', new THREE.Float32BufferAttribute(emissiveStrengths, 1));
+  geometry.setAttribute(
+    'aEmissiveStrength',
+    new THREE.Float32BufferAttribute(emissiveStrengths, 1),
+  );
   geometry.setIndex(indices);
 
   const material = new THREE.MeshStandardMaterial({
@@ -282,7 +382,9 @@ export function buildChunkMesh(
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uWindTime = windTimeUniform;
     // Add attribute + uniform declarations
-    shader.vertexShader = 'attribute float aEmissiveStrength;\nvarying float vEmissiveStrength;\nuniform float uWindTime;\n' + shader.vertexShader;
+    shader.vertexShader =
+      'attribute float aEmissiveStrength;\nvarying float vEmissiveStrength;\nuniform float uWindTime;\n' +
+      shader.vertexShader;
     // Pass emissive strength to fragment shader
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
@@ -296,7 +398,7 @@ export function buildChunkMesh(
       float wave2 = cos(uWindTime * 1.3 + worldPos.z * 2.5 + worldPos.x * 0.8) * windStrength * 0.6;
       transformed.x += wave;
       transformed.z += wave2;
-      `
+      `,
     );
     // In fragment shader, scale emissive by per-vertex strength
     shader.fragmentShader = 'varying float vEmissiveStrength;\n' + shader.fragmentShader;
@@ -304,7 +406,7 @@ export function buildChunkMesh(
       '#include <emissivemap_fragment>',
       `#include <emissivemap_fragment>
       totalEmissiveRadiance *= vEmissiveStrength;
-      `
+      `,
     );
   };
 

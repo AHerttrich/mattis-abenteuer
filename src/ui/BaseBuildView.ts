@@ -19,25 +19,25 @@ import type { HUD } from './HUD';
 
 // ── Colours per building type ─────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {
-  [BuildingType.BARRACKS]:       '#3498db',
-  [BuildingType.ARCHERY_RANGE]:  '#2ecc71',
-  [BuildingType.STABLE]:         '#9b59b6',
+  [BuildingType.BARRACKS]: '#3498db',
+  [BuildingType.ARCHERY_RANGE]: '#2ecc71',
+  [BuildingType.STABLE]: '#9b59b6',
   [BuildingType.SIEGE_WORKSHOP]: '#e67e22',
-  [BuildingType.WATCHTOWER]:     '#f1c40f',
-  [BuildingType.WALL]:           '#95a5a6',
-  [BuildingType.GATE]:           '#7f8c8d',
-  [BuildingType.THRONE_ROOM]:    '#ffd700',
+  [BuildingType.WATCHTOWER]: '#f1c40f',
+  [BuildingType.WALL]: '#95a5a6',
+  [BuildingType.GATE]: '#7f8c8d',
+  [BuildingType.THRONE_ROOM]: '#ffd700',
 };
 
 const TYPE_ICONS: Record<string, string> = {
-  [BuildingType.BARRACKS]:       '⚔️',
-  [BuildingType.ARCHERY_RANGE]:  '🏹',
-  [BuildingType.STABLE]:         '🐴',
+  [BuildingType.BARRACKS]: '⚔️',
+  [BuildingType.ARCHERY_RANGE]: '🏹',
+  [BuildingType.STABLE]: '🐴',
   [BuildingType.SIEGE_WORKSHOP]: '💣',
-  [BuildingType.WATCHTOWER]:     '🗼',
-  [BuildingType.WALL]:           '🧱',
-  [BuildingType.GATE]:           '🚪',
-  [BuildingType.THRONE_ROOM]:    '👑',
+  [BuildingType.WATCHTOWER]: '🗼',
+  [BuildingType.WALL]: '🧱',
+  [BuildingType.GATE]: '🚪',
+  [BuildingType.THRONE_ROOM]: '👑',
 };
 
 export class BaseBuildView {
@@ -84,7 +84,8 @@ export class BaseBuildView {
   private _onKey: (e: KeyboardEvent) => void;
 
   // Build callback
-  private buildCallback: ((type: BuildingType, wx: number, wy: number, wz: number) => void) | null = null;
+  private buildCallback: ((type: BuildingType, wx: number, wy: number, wz: number) => void) | null =
+    null;
 
   constructor(castle: Castle, inventory: Inventory, _chunkManager: ChunkManager, hud: HUD) {
     this.castle = castle;
@@ -98,47 +99,81 @@ export class BaseBuildView {
     // ── Overlay container ──────────────────────────────────────
     this.overlay = document.createElement('div');
     this.overlay.id = 'base-build-view';
-    this.overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:180;display:none;background:rgba(10,15,25,0.92);font-family:monospace;color:#fff;';
+    this.overlay.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;z-index:180;display:none;background:rgba(10,15,25,0.92);font-family:monospace;color:#fff;';
 
     // ── Title bar ──────────────────────────────────────────────
     const titleBar = document.createElement('div');
-    titleBar.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-size:16px;letter-spacing:2px;z-index:2;gap:12px;';
-    titleBar.innerHTML = '🏰 <span style="color:#f1c40f;margin:0 8px;">BASE BUILDING</span> 🏰 &nbsp;<span style="color:#7f8c8d;font-size:11px;">Scroll=Zoom &nbsp;RightDrag=Pan &nbsp;Click=Place &nbsp;RightClick=Demolish &nbsp;ESC=Close</span>';
+    titleBar.style.cssText =
+      'position:absolute;top:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-size:16px;letter-spacing:2px;z-index:2;gap:12px;';
+    titleBar.innerHTML =
+      '🏰 <span style="color:#f1c40f;margin:0 8px;">BASE BUILDING</span> 🏰 &nbsp;<span style="color:#7f8c8d;font-size:11px;">Scroll=Zoom &nbsp;RightDrag=Pan &nbsp;Click=Place &nbsp;RightClick=Demolish &nbsp;ESC=Close</span>';
     // Fit All button
     const fitBtn = document.createElement('button');
-    fitBtn.style.cssText = 'background:#2040c0;color:#fff;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:11px;font-family:monospace;';
+    fitBtn.style.cssText =
+      'background:#2040c0;color:#fff;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:11px;font-family:monospace;';
     fitBtn.textContent = '⊞ Fit All';
     fitBtn.addEventListener('click', () => this.fitAllZoom());
     titleBar.appendChild(fitBtn);
 
     // ── Tooltip ────────────────────────────────────────────────
     this.tooltip = document.createElement('div');
-    this.tooltip.style.cssText = 'position:fixed;pointer-events:none;z-index:500;display:none;background:rgba(15,15,30,0.95);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-size:11px;color:#ddd;box-shadow:0 4px 16px rgba(0,0,0,0.6);max-width:200px;font-family:monospace;';
+    this.tooltip.style.cssText =
+      'position:fixed;pointer-events:none;z-index:500;display:none;background:rgba(15,15,30,0.95);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-size:11px;color:#ddd;box-shadow:0 4px 16px rgba(0,0,0,0.6);max-width:200px;font-family:monospace;';
     document.body.appendChild(this.tooltip);
     this.overlay.appendChild(titleBar);
 
     // ── Palette sidebar ────────────────────────────────────────
     this.palette = document.createElement('div');
-    this.palette.style.cssText = 'position:absolute;top:50px;left:12px;width:160px;bottom:12px;overflow-y:auto;z-index:2;display:flex;flex-direction:column;gap:6px;';
+    this.palette.style.cssText =
+      'position:absolute;top:50px;left:12px;width:160px;bottom:12px;overflow-y:auto;z-index:2;display:flex;flex-direction:column;gap:6px;';
     this.buildPalette();
     this.overlay.appendChild(this.palette);
 
     // ── Canvas ─────────────────────────────────────────────────
     this.canvas = document.createElement('canvas');
-    this.canvas.style.cssText = 'position:absolute;top:50px;left:184px;right:12px;bottom:12px;border-radius:8px;cursor:crosshair;';
+    this.canvas.style.cssText =
+      'position:absolute;top:50px;left:184px;right:12px;bottom:12px;border-radius:8px;cursor:crosshair;';
     this.overlay.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d')!;
 
     document.body.appendChild(this.overlay);
 
     // ── Event handlers ─────────────────────────────────────────
-    this._onWheel = (e) => { if (!this._visible) return; e.preventDefault(); this.cellSize = Math.max(this.minCellSize, Math.min(this.maxCellSize, this.cellSize + (e.deltaY > 0 ? -1 : 1))); this.render(); };
+    this._onWheel = (e) => {
+      if (!this._visible) return;
+      e.preventDefault();
+      this.cellSize = Math.max(
+        this.minCellSize,
+        Math.min(this.maxCellSize, this.cellSize + (e.deltaY > 0 ? -1 : 1)),
+      );
+      this.render();
+    };
     this._onMouseMove = (e) => this.handleMouseMove(e);
-    this._onMouseDown = (e) => { if (!this._visible || e.button !== 2) return; this.isPanning = true; this.panMouseX = e.clientX; this.panMouseZ = e.clientY; this.panStartX = this.viewX; this.panStartZ = this.viewZ; };
-    this._onMouseUp = () => { this.isPanning = false; };
+    this._onMouseDown = (e) => {
+      if (!this._visible || e.button !== 2) return;
+      this.isPanning = true;
+      this.panMouseX = e.clientX;
+      this.panMouseZ = e.clientY;
+      this.panStartX = this.viewX;
+      this.panStartZ = this.viewZ;
+    };
+    this._onMouseUp = () => {
+      this.isPanning = false;
+    };
     this._onClick = (e) => this.handleClick(e);
     this._onRightClick = (e) => this.handleRightClick(e);
-    this._onKey = (e) => { if (this._visible && e.key === 'Escape') { if (this.rearrangeTarget) { this.rearrangeTarget = null; this.hud.showInfo('Rearrange cancelled'); this.render(); } else { this.close(); } } };
+    this._onKey = (e) => {
+      if (this._visible && e.key === 'Escape') {
+        if (this.rearrangeTarget) {
+          this.rearrangeTarget = null;
+          this.hud.showInfo('Rearrange cancelled');
+          this.render();
+        } else {
+          this.close();
+        }
+      }
+    };
 
     this.canvas.addEventListener('wheel', this._onWheel, { passive: false });
     this.canvas.addEventListener('mousemove', this._onMouseMove);
@@ -185,8 +220,12 @@ export class BaseBuildView {
 
       if (canAfford) {
         btn.addEventListener('click', () => this.selectBuilding(opt));
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#f1c40f'; });
-        btn.addEventListener('mouseleave', () => { btn.style.borderColor = this.selected === opt ? '#2ecc71' : 'rgba(255,255,255,0.2)'; });
+        btn.addEventListener('mouseenter', () => {
+          btn.style.borderColor = '#f1c40f';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.borderColor = this.selected === opt ? '#2ecc71' : 'rgba(255,255,255,0.2)';
+        });
       }
 
       btn.dataset.type = opt.type;
@@ -196,10 +235,14 @@ export class BaseBuildView {
 
   private getBuildingHP(type: BuildingType): number {
     const hpMap: Record<string, number> = {
-      [BuildingType.BARRACKS]: 200, [BuildingType.ARCHERY_RANGE]: 180,
-      [BuildingType.STABLE]: 220, [BuildingType.SIEGE_WORKSHOP]: 250,
-      [BuildingType.WATCHTOWER]: 150, [BuildingType.WALL]: 300,
-      [BuildingType.GATE]: 400, [BuildingType.THRONE_ROOM]: 500,
+      [BuildingType.BARRACKS]: 200,
+      [BuildingType.ARCHERY_RANGE]: 180,
+      [BuildingType.STABLE]: 220,
+      [BuildingType.SIEGE_WORKSHOP]: 250,
+      [BuildingType.WATCHTOWER]: 150,
+      [BuildingType.WALL]: 300,
+      [BuildingType.GATE]: 400,
+      [BuildingType.THRONE_ROOM]: 500,
     };
     return hpMap[type] ?? 200;
   }
@@ -208,8 +251,9 @@ export class BaseBuildView {
     this.selected = opt;
     this.hud.showInfo(`🏗️ ${opt.label} selected — click grid to place`);
     // Highlight selected in palette
-    this.palette.querySelectorAll('div[data-type]').forEach(el => {
-      (el as HTMLElement).style.borderColor = el.getAttribute('data-type') === opt.type ? '#2ecc71' : 'rgba(255,255,255,0.2)';
+    this.palette.querySelectorAll('div[data-type]').forEach((el) => {
+      (el as HTMLElement).style.borderColor =
+        el.getAttribute('data-type') === opt.type ? '#2ecc71' : 'rgba(255,255,255,0.2)';
     });
     this.render();
   }
@@ -235,11 +279,15 @@ export class BaseBuildView {
     this.selected = null;
     this.rearrangeTarget = null;
     this.tooltip.style.display = 'none';
-    const canvas = document.querySelector('canvas:not(#base-build-view canvas)') as HTMLCanvasElement | null;
+    const canvas = document.querySelector(
+      'canvas:not(#base-build-view canvas)',
+    ) as HTMLCanvasElement | null;
     if (canvas) canvas.requestPointerLock();
   }
 
-  get isVisible(): boolean { return this._visible; }
+  get isVisible(): boolean {
+    return this._visible;
+  }
 
   /** Auto-zoom to fit all buildings with padding. */
   private fitAllZoom(): void {
@@ -255,7 +303,10 @@ export class BaseBuildView {
     // Calculate cell size to fit all + 20% padding
     const cellW = (rect.width * 0.8) / worldW;
     const cellH = (rect.height * 0.8) / worldH;
-    this.cellSize = Math.max(this.minCellSize, Math.min(this.maxCellSize, Math.floor(Math.min(cellW, cellH))));
+    this.cellSize = Math.max(
+      this.minCellSize,
+      Math.min(this.maxCellSize, Math.floor(Math.min(cellW, cellH))),
+    );
     this.render();
   }
 
@@ -287,11 +338,17 @@ export class BaseBuildView {
     ctx.lineWidth = 0.5;
     for (let wx = bounds.minX; wx <= bounds.maxX; wx++) {
       const sx = this.worldToScreenX(wx, W);
-      ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx, 0);
+      ctx.lineTo(sx, H);
+      ctx.stroke();
     }
     for (let wz = bounds.minZ; wz <= bounds.maxZ; wz++) {
       const sy = this.worldToScreenZ(wz, H);
-      ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, sy);
+      ctx.lineTo(W, sy);
+      ctx.stroke();
     }
 
     // ── Castle area highlight ─────────────────────────────
@@ -355,7 +412,12 @@ export class BaseBuildView {
     this.drawCompass(ctx, W, H);
   }
 
-  private drawBuilding(ctx: CanvasRenderingContext2D, bld: CastleBuilding, W: number, H: number): void {
+  private drawBuilding(
+    ctx: CanvasRenderingContext2D,
+    bld: CastleBuilding,
+    W: number,
+    H: number,
+  ): void {
     const cs = this.cellSize;
     const fp = BUILDING_FOOTPRINT[bld.type] ?? 5;
     const half = Math.floor(fp / 2);
@@ -374,8 +436,8 @@ export class BaseBuildView {
     ctx.globalAlpha = 1;
 
     // Border (pulsing if being rearranged)
-    ctx.strokeStyle = isRearranging ? '#f1c40f' : (bld.hp <= 0 ? '#333' : baseColor);
-    ctx.lineWidth = isRearranging ? 3 : (bld.type === BuildingType.THRONE_ROOM ? 3 : 1.5);
+    ctx.strokeStyle = isRearranging ? '#f1c40f' : bld.hp <= 0 ? '#333' : baseColor;
+    ctx.lineWidth = isRearranging ? 3 : bld.type === BuildingType.THRONE_ROOM ? 3 : 1.5;
     if (isRearranging) ctx.setLineDash([4, 4]);
     ctx.strokeRect(sx + 1, sy + 1, pw - 2, ph - 2);
     ctx.setLineDash([]);
@@ -426,8 +488,10 @@ export class BaseBuildView {
       ctx.strokeStyle = '#e74c3c';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(sx + 4, sy + 4); ctx.lineTo(sx + pw - 4, sy + ph - 4);
-      ctx.moveTo(sx + pw - 4, sy + 4); ctx.lineTo(sx + 4, sy + ph - 4);
+      ctx.moveTo(sx + 4, sy + 4);
+      ctx.lineTo(sx + pw - 4, sy + ph - 4);
+      ctx.moveTo(sx + pw - 4, sy + 4);
+      ctx.lineTo(sx + 4, sy + ph - 4);
       ctx.stroke();
     }
   }
@@ -484,13 +548,14 @@ export class BaseBuildView {
     if (hoveredBld && !this.selected && !this.rearrangeTarget) {
       const spawns = hoveredBld.spawnsUnits ? hoveredBld.spawnsUnits.join(', ') : 'none';
       const hpPct = Math.round((hoveredBld.hp / hoveredBld.maxHp) * 100);
-      this.tooltip.innerHTML = `<div style="font-weight:bold;color:${TYPE_COLORS[hoveredBld.type] ?? '#fff'};margin-bottom:4px;">${TYPE_ICONS[hoveredBld.type] ?? ''} ${hoveredBld.type.toUpperCase()}</div>`
-        + `<div>HP: ${hoveredBld.hp}/${hoveredBld.maxHp} (${hpPct}%)</div>`
-        + `<div style="color:#7f8c8d;">Spawns: ${spawns}</div>`
-        + `<div style="color:#555;font-size:10px;margin-top:4px;">Click to rearrange · Right-click to demolish</div>`;
+      this.tooltip.innerHTML =
+        `<div style="font-weight:bold;color:${TYPE_COLORS[hoveredBld.type] ?? '#fff'};margin-bottom:4px;">${TYPE_ICONS[hoveredBld.type] ?? ''} ${hoveredBld.type.toUpperCase()}</div>` +
+        `<div>HP: ${hoveredBld.hp}/${hoveredBld.maxHp} (${hpPct}%)</div>` +
+        `<div style="color:#7f8c8d;">Spawns: ${spawns}</div>` +
+        `<div style="color:#555;font-size:10px;margin-top:4px;">Click to rearrange · Right-click to demolish</div>`;
       this.tooltip.style.display = 'block';
-      this.tooltip.style.left = (e.clientX + 14) + 'px';
-      this.tooltip.style.top = (e.clientY - 10) + 'px';
+      this.tooltip.style.left = e.clientX + 14 + 'px';
+      this.tooltip.style.top = e.clientY - 10 + 'px';
     } else {
       this.tooltip.style.display = 'none';
     }
@@ -509,7 +574,10 @@ export class BaseBuildView {
     // Rearrange mode: drop building at new location
     if (this.rearrangeTarget) {
       const existing = this.castle.getBuildingAt(wx, wz);
-      if (existing && existing !== this.rearrangeTarget) { this.hud.showInfo('❌ Space occupied!', 1500); return; }
+      if (existing && existing !== this.rearrangeTarget) {
+        this.hud.showInfo('❌ Space occupied!', 1500);
+        return;
+      }
       this.rearrangeTarget.x = wx;
       this.rearrangeTarget.z = wz;
       this.hud.showInfo(`📦 ${this.rearrangeTarget.type} moved!`, 1500);
@@ -532,8 +600,14 @@ export class BaseBuildView {
 
     // Place new building
     const existingAtPlace = this.castle.getBuildingAt(wx, wz);
-    if (existingAtPlace) { this.hud.showInfo('❌ Space already occupied!', 1500); return; }
-    if (!this.checkCost(this.selected.cost)) { this.hud.showInfo('❌ Not enough materials!', 1500); return; }
+    if (existingAtPlace) {
+      this.hud.showInfo('❌ Space already occupied!', 1500);
+      return;
+    }
+    if (!this.checkCost(this.selected.cost)) {
+      this.hud.showInfo('❌ Not enough materials!', 1500);
+      return;
+    }
 
     for (const req of this.selected.cost) {
       this.inventory.removeItem(req.itemId, req.count);
@@ -564,7 +638,7 @@ export class BaseBuildView {
     if (!bld || bld.type === BuildingType.THRONE_ROOM) return;
 
     // Find cost from BUILDING_OPTIONS
-    const opt = BUILDING_OPTIONS.find(o => o.type === bld.type);
+    const opt = BUILDING_OPTIONS.find((o) => o.type === bld.type);
     if (opt) {
       // Refund 50%
       for (const req of opt.cost) {
@@ -582,7 +656,7 @@ export class BaseBuildView {
   }
 
   private checkCost(cost: { itemId: string; count: number }[]): boolean {
-    return cost.every(req => this.inventory.countItem(req.itemId) >= req.count);
+    return cost.every((req) => this.inventory.countItem(req.itemId) >= req.count);
   }
 
   /** Call each frame to keep HP bars in sync. */

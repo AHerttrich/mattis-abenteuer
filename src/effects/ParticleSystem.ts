@@ -136,7 +136,7 @@ export class ParticleSystem {
 
       // Fade out
       const mat = burst.points.material as THREE.PointsMaterial;
-      mat.opacity = 1.0 - (burst.age / burst.maxAge);
+      mat.opacity = 1.0 - burst.age / burst.maxAge;
     }
 
     // Remove expired

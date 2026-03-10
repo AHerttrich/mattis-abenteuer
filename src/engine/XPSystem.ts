@@ -64,7 +64,13 @@ export class XPSystem {
       }
     });
     eventBus.on(Events.BLOCK_DESTROYED, (data: any) => {
-      const oreMap: Record<number, string> = { 30: 'mine_coal', 31: 'mine_iron', 32: 'mine_gold', 33: 'mine_crystal', 34: 'mine_diamond' };
+      const oreMap: Record<number, string> = {
+        30: 'mine_coal',
+        31: 'mine_iron',
+        32: 'mine_gold',
+        33: 'mine_crystal',
+        34: 'mine_diamond',
+      };
       const key = oreMap[data.blockType];
       if (key) this.addXP(XP_VALUES[key] ?? 3);
     });
@@ -108,6 +114,10 @@ export class XPSystem {
     this.stats.bonusArmor = Math.floor(lvl * 0.3);
   }
 
-  getStats(): PlayerStats { return { ...this.stats }; }
-  get level(): number { return this.stats.level; }
+  getStats(): PlayerStats {
+    return { ...this.stats };
+  }
+  get level(): number {
+    return this.stats.level;
+  }
 }

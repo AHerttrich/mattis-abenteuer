@@ -10,7 +10,8 @@ export class DeathScreen {
   constructor() {
     this.overlay = document.createElement('div');
     this.overlay.id = 'death-screen';
-    this.overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(100,0,0,0.7);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;font-family:monospace;';
+    this.overlay.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(100,0,0,0.7);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;font-family:monospace;';
 
     const panel = document.createElement('div');
     panel.style.cssText = 'text-align:center;';
@@ -21,17 +22,30 @@ export class DeathScreen {
 
     const respawnBtn = document.createElement('button');
     respawnBtn.textContent = '⟳  Respawn';
-    respawnBtn.style.cssText = 'background:linear-gradient(135deg,#c0392b,#e74c3c);border:none;color:#fff;padding:14px 40px;font-size:20px;border-radius:8px;cursor:pointer;font-family:monospace;transition:transform 0.2s;pointer-events:auto;';
-    respawnBtn.addEventListener('click', () => { this.hide(); this.onRespawn?.(); });
-    respawnBtn.addEventListener('mouseenter', () => { respawnBtn.style.transform = 'scale(1.05)'; });
-    respawnBtn.addEventListener('mouseleave', () => { respawnBtn.style.transform = 'scale(1)'; });
+    respawnBtn.style.cssText =
+      'background:linear-gradient(135deg,#c0392b,#e74c3c);border:none;color:#fff;padding:14px 40px;font-size:20px;border-radius:8px;cursor:pointer;font-family:monospace;transition:transform 0.2s;pointer-events:auto;';
+    respawnBtn.addEventListener('click', () => {
+      this.hide();
+      this.onRespawn?.();
+    });
+    respawnBtn.addEventListener('mouseenter', () => {
+      respawnBtn.style.transform = 'scale(1.05)';
+    });
+    respawnBtn.addEventListener('mouseleave', () => {
+      respawnBtn.style.transform = 'scale(1)';
+    });
     panel.appendChild(respawnBtn);
 
     this.overlay.appendChild(panel);
     document.body.appendChild(this.overlay);
   }
 
-  show(stats: { blocksMined: number; enemiesKilled: number; timePlayed: number; cause: string }): void {
+  show(stats: {
+    blocksMined: number;
+    enemiesKilled: number;
+    timePlayed: number;
+    cause: string;
+  }): void {
     this._visible = true;
     this.overlay.style.display = 'flex';
     document.exitPointerLock();
@@ -59,6 +73,10 @@ export class DeathScreen {
     this.onRespawn = cb;
   }
 
-  get isVisible(): boolean { return this._visible; }
-  destroy(): void { this.overlay.remove(); }
+  get isVisible(): boolean {
+    return this._visible;
+  }
+  destroy(): void {
+    this.overlay.remove();
+  }
 }

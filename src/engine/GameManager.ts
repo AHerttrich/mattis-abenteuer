@@ -48,15 +48,18 @@ export class GameManager {
           const tx = this.enemyCastle.throne.x;
           const tz = this.enemyCastle.throne.z;
           const dist = Math.sqrt(Math.pow(x - tx, 2) + Math.pow(z - tz, 2));
-          // Throne room base is 7x7 (dist up to ~4-5 for walls/door). 
+          // Throne room base is 7x7 (dist up to ~4-5 for walls/door).
           if (dist <= 6) {
             this.bossSpawned = true;
             this.hud.showInfo('⚠️ THE CASTLE BOSS HAS AWAKENED! ⚠️', 5000);
             this.warriorManager.spawnWarrior(
               WarriorType.CASTLE_BOSS,
               'enemy',
-              tx, this.enemyCastle.throne.y + 1, tz,
-              this.enemyCastle.id, this.playerCastle?.id ?? ''
+              tx,
+              this.enemyCastle.throne.y + 1,
+              tz,
+              this.enemyCastle.id,
+              this.playerCastle?.id ?? '',
             );
           }
         }
@@ -64,8 +67,12 @@ export class GameManager {
     });
   }
 
-  setPlayerCastle(castle: Castle): void { this.playerCastle = castle; }
-  setEnemyCastle(castle: Castle): void { this.enemyCastle = castle; }
+  setPlayerCastle(castle: Castle): void {
+    this.playerCastle = castle;
+  }
+  setEnemyCastle(castle: Castle): void {
+    this.enemyCastle = castle;
+  }
 
   update(dt: number, playerX: number, playerZ: number): void {
     if (this.phase === GamePhase.VICTORY || this.phase === GamePhase.DEFEAT) return;
@@ -81,8 +88,13 @@ export class GameManager {
         this.enemyCastleDiscovered = true;
         this.phase = GamePhase.CASTLE_DISCOVERED;
         this.hud.showInfo('⚔️ Enemy Castle Discovered! Prepare for war!', 5000);
-        eventBus.emit(Events.ENEMY_CASTLE_DISCOVERED, { x: this.enemyCastle.x, z: this.enemyCastle.z });
-        setTimeout(() => { this.phase = GamePhase.WARFARE; }, 5000);
+        eventBus.emit(Events.ENEMY_CASTLE_DISCOVERED, {
+          x: this.enemyCastle.x,
+          z: this.enemyCastle.z,
+        });
+        setTimeout(() => {
+          this.phase = GamePhase.WARFARE;
+        }, 5000);
       }
     }
 
@@ -91,9 +103,13 @@ export class GameManager {
       const spawns = this.playerCastle.update(this.gameTime);
       for (const spawn of spawns) {
         this.warriorManager.spawnWarrior(
-          spawn.warriorType, 'player',
-          spawn.x, spawn.y, spawn.z,
-          this.playerCastle.id, this.enemyCastle?.id ?? '',
+          spawn.warriorType,
+          'player',
+          spawn.x,
+          spawn.y,
+          spawn.z,
+          this.playerCastle.id,
+          this.enemyCastle?.id ?? '',
         );
       }
     }
@@ -102,9 +118,13 @@ export class GameManager {
       const spawns = this.enemyCastle.update(this.gameTime);
       for (const spawn of spawns) {
         this.warriorManager.spawnWarrior(
-          spawn.warriorType, 'enemy',
-          spawn.x, spawn.y, spawn.z,
-          this.enemyCastle.id, this.playerCastle?.id ?? '',
+          spawn.warriorType,
+          'enemy',
+          spawn.x,
+          spawn.y,
+          spawn.z,
+          this.enemyCastle.id,
+          this.playerCastle?.id ?? '',
         );
       }
     }
@@ -112,7 +132,8 @@ export class GameManager {
 
   private showVictory(): void {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 1s;';
+    overlay.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 1s;';
     overlay.innerHTML = `
       <h1 style="font-size:64px;color:#f1c40f;text-shadow:4px 4px 8px #000;">🏆 VICTORY! 🏆</h1>
       <p style="font-size:24px;color:#2ecc71;margin-top:20px;">The enemy castle has been destroyed!</p>
@@ -126,7 +147,8 @@ export class GameManager {
 
   private showDefeat(): void {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 1s;';
+    overlay.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 1s;';
     overlay.innerHTML = `
       <h1 style="font-size:64px;color:#e74c3c;text-shadow:4px 4px 8px #000;">💀 DEFEAT 💀</h1>
       <p style="font-size:24px;color:#e74c3c;margin-top:20px;">Your castle has been destroyed!</p>
@@ -144,6 +166,10 @@ export class GameManager {
     return `${mins}m ${secs}s`;
   }
 
-  get currentPhase(): GamePhase { return this.phase; }
-  get isEnemyCastleDiscovered(): boolean { return this.enemyCastleDiscovered; }
+  get currentPhase(): GamePhase {
+    return this.phase;
+  }
+  get isEnemyCastleDiscovered(): boolean {
+    return this.enemyCastleDiscovered;
+  }
 }

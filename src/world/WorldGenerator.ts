@@ -97,23 +97,35 @@ export class WorldGenerator {
     if (height > SEA_LEVEL + 30) return BlockType.SNOW;
     if (height > SEA_LEVEL + 25) return BlockType.STONE;
     switch (biome) {
-      case Biome.DESERT: return BlockType.SAND;
-      case Biome.TUNDRA: return BlockType.SNOW;
-      case Biome.SWAMP: return BlockType.CLAY;
-      case Biome.MOUNTAIN: return height > SEA_LEVEL + 15 ? BlockType.STONE : BlockType.GRASS;
-      case Biome.FOREST: return BlockType.GRASS;
-      case Biome.PLAINS: return BlockType.GRASS;
-      default: return BlockType.GRASS;
+      case Biome.DESERT:
+        return BlockType.SAND;
+      case Biome.TUNDRA:
+        return BlockType.SNOW;
+      case Biome.SWAMP:
+        return BlockType.CLAY;
+      case Biome.MOUNTAIN:
+        return height > SEA_LEVEL + 15 ? BlockType.STONE : BlockType.GRASS;
+      case Biome.FOREST:
+        return BlockType.GRASS;
+      case Biome.PLAINS:
+        return BlockType.GRASS;
+      default:
+        return BlockType.GRASS;
     }
   }
 
   private subsurfaceBlock(biome: Biome): BlockType {
     switch (biome) {
-      case Biome.DESERT: return BlockType.SANDSTONE;
-      case Biome.TUNDRA: return BlockType.DIRT;
-      case Biome.SWAMP: return BlockType.CLAY;
-      case Biome.MOUNTAIN: return BlockType.STONE;
-      default: return BlockType.DIRT;
+      case Biome.DESERT:
+        return BlockType.SANDSTONE;
+      case Biome.TUNDRA:
+        return BlockType.DIRT;
+      case Biome.SWAMP:
+        return BlockType.CLAY;
+      case Biome.MOUNTAIN:
+        return BlockType.STONE;
+      default:
+        return BlockType.DIRT;
     }
   }
 
@@ -160,17 +172,24 @@ export class WorldGenerator {
       for (let lz = 0; lz < CHUNK_SIZE; lz++) {
         for (let y = 2; y < 8; y++) {
           // Lava pools at bottom of caves
-          if (chunk.getBlock(lx, y, lz) === BlockType.AIR && chunk.getBlock(lx, y - 1, lz) !== BlockType.AIR) {
+          if (
+            chunk.getBlock(lx, y, lz) === BlockType.AIR &&
+            chunk.getBlock(lx, y - 1, lz) !== BlockType.AIR
+          ) {
             chunk.setBlock(lx, y, lz, BlockType.LAVA);
           }
         }
         // Chests in cave air pockets (rare)
         for (let y = 10; y < 50; y++) {
-          if (chunk.getBlock(lx, y, lz) === BlockType.AIR &&
-              chunk.getBlock(lx, y - 1, lz) === BlockType.STONE) {
-            const wx = chunk.worldX + lx, wz = chunk.worldZ + lz;
+          if (
+            chunk.getBlock(lx, y, lz) === BlockType.AIR &&
+            chunk.getBlock(lx, y - 1, lz) === BlockType.STONE
+          ) {
+            const wx = chunk.worldX + lx,
+              wz = chunk.worldZ + lz;
             const n = this.noise.noise3D(wx * 0.3, y * 0.3, wz * 0.3);
-            if (n > 0.92) { // Very rare
+            if (n > 0.92) {
+              // Very rare
               chunk.setBlock(lx, y, lz, BlockType.CHEST);
             }
           }
@@ -184,7 +203,8 @@ export class WorldGenerator {
       for (let z = 0; z < CHUNK_SIZE; z++) {
         for (let x = 0; x < CHUNK_SIZE; x++) {
           if (chunk.getBlock(x, y, z) !== BlockType.STONE) continue;
-          const wx = chunk.worldX + x, wz = chunk.worldZ + z;
+          const wx = chunk.worldX + x,
+            wz = chunk.worldZ + z;
           const n1 = this.noise.noise3D(wx * 0.1, y * 0.1, wz * 0.1);
           const n2 = this.noise.noise3D(wx * 0.08 + 500, y * 0.08, wz * 0.08 + 500);
 
@@ -207,7 +227,8 @@ export class WorldGenerator {
   private generateVegetation(chunk: Chunk): void {
     for (let lx = 2; lx < CHUNK_SIZE - 2; lx++) {
       for (let lz = 2; lz < CHUNK_SIZE - 2; lz++) {
-        const wx = chunk.worldX + lx, wz = chunk.worldZ + lz;
+        const wx = chunk.worldX + lx,
+          wz = chunk.worldZ + lz;
         const biome = this.getBiome(wx, wz);
         const treeNoise = this.noise.noise2D(wx * 0.5, wz * 0.5);
         const sy = chunk.getHeightAt(lx, lz);
@@ -239,10 +260,26 @@ export class WorldGenerator {
     }
   }
 
-  private placeTree(chunk: Chunk, lx: number, sy: number, lz: number, variant: 'oak' | 'birch' | 'dark'): void {
-    const wood = variant === 'birch' ? BlockType.WOOD_BIRCH : variant === 'dark' ? BlockType.WOOD_DARK : BlockType.WOOD_OAK;
+  private placeTree(
+    chunk: Chunk,
+    lx: number,
+    sy: number,
+    lz: number,
+    variant: 'oak' | 'birch' | 'dark',
+  ): void {
+    const wood =
+      variant === 'birch'
+        ? BlockType.WOOD_BIRCH
+        : variant === 'dark'
+          ? BlockType.WOOD_DARK
+          : BlockType.WOOD_OAK;
     const leaf = variant === 'birch' ? BlockType.LEAVES_BIRCH : BlockType.LEAVES_OAK;
-    const th = variant === 'dark' ? 6 : variant === 'birch' ? 5 : 4 + Math.floor(this.noise.noise2D(lx * 3, lz * 3) + 1);
+    const th =
+      variant === 'dark'
+        ? 6
+        : variant === 'birch'
+          ? 5
+          : 4 + Math.floor(this.noise.noise2D(lx * 3, lz * 3) + 1);
 
     // Trunk
     for (let dy = 0; dy < th; dy++) {
@@ -257,7 +294,9 @@ export class WorldGenerator {
         for (let dz = -r; dz <= r; dz++) {
           if (Math.abs(dx) === r && Math.abs(dz) === r) continue;
           if (dx === 0 && dz === 0 && dy < 2) continue;
-          const bx = lx + dx, by = cs + dy, bz = lz + dz;
+          const bx = lx + dx,
+            by = cs + dy,
+            bz = lz + dz;
           if (chunk.inBounds(bx, by, bz) && chunk.getBlock(bx, by, bz) === BlockType.AIR) {
             chunk.setBlock(bx, by, bz, leaf);
           }
@@ -268,8 +307,7 @@ export class WorldGenerator {
 
   private fillBedrock(chunk: Chunk): void {
     for (let x = 0; x < CHUNK_SIZE; x++)
-      for (let z = 0; z < CHUNK_SIZE; z++)
-        chunk.setBlock(x, 0, z, BlockType.BEDROCK);
+      for (let z = 0; z < CHUNK_SIZE; z++) chunk.setBlock(x, 0, z, BlockType.BEDROCK);
   }
 
   getHeightAtWorld(wx: number, wz: number): number {
@@ -280,5 +318,7 @@ export class WorldGenerator {
     return Math.floor(base + mountain + detail);
   }
 
-  get currentSeed(): number { return this.seed; }
+  get currentSeed(): number {
+    return this.seed;
+  }
 }

@@ -18,20 +18,66 @@ export interface BuildingOption {
 }
 
 export const BUILDING_OPTIONS: BuildingOption[] = [
-  { type: BuildingType.WALL, label: 'Wall', icon: '🧱',
-    cost: [{ itemId: 'stone_brick', count: 20 }] },
-  { type: BuildingType.WATCHTOWER, label: 'Watchtower', icon: '🗼',
-    cost: [{ itemId: 'stone_brick', count: 40 }, { itemId: 'planks_oak', count: 10 }] },
-  { type: BuildingType.GATE, label: 'Gate', icon: '🚪',
-    cost: [{ itemId: 'planks_dark', count: 30 }, { itemId: 'iron_ingot', count: 5 }] },
-  { type: BuildingType.BARRACKS, label: 'Barracks', icon: '⚔️',
-    cost: [{ itemId: 'stone_brick', count: 30 }, { itemId: 'planks_oak', count: 20 }] },
-  { type: BuildingType.ARCHERY_RANGE, label: 'Archery Range', icon: '🏹',
-    cost: [{ itemId: 'planks_oak', count: 40 }, { itemId: 'string', count: 10 }] },
-  { type: BuildingType.STABLE, label: 'Stable', icon: '🐴',
-    cost: [{ itemId: 'planks_oak', count: 50 }, { itemId: 'iron_ingot', count: 8 }] },
-  { type: BuildingType.SIEGE_WORKSHOP, label: 'Siege Workshop', icon: '💣',
-    cost: [{ itemId: 'iron_ingot', count: 20 }, { itemId: 'planks_dark', count: 30 }] },
+  {
+    type: BuildingType.WALL,
+    label: 'Wall',
+    icon: '🧱',
+    cost: [{ itemId: 'stone_brick', count: 20 }],
+  },
+  {
+    type: BuildingType.WATCHTOWER,
+    label: 'Watchtower',
+    icon: '🗼',
+    cost: [
+      { itemId: 'stone_brick', count: 40 },
+      { itemId: 'planks_oak', count: 10 },
+    ],
+  },
+  {
+    type: BuildingType.GATE,
+    label: 'Gate',
+    icon: '🚪',
+    cost: [
+      { itemId: 'planks_dark', count: 30 },
+      { itemId: 'iron_ingot', count: 5 },
+    ],
+  },
+  {
+    type: BuildingType.BARRACKS,
+    label: 'Barracks',
+    icon: '⚔️',
+    cost: [
+      { itemId: 'stone_brick', count: 30 },
+      { itemId: 'planks_oak', count: 20 },
+    ],
+  },
+  {
+    type: BuildingType.ARCHERY_RANGE,
+    label: 'Archery Range',
+    icon: '🏹',
+    cost: [
+      { itemId: 'planks_oak', count: 40 },
+      { itemId: 'string', count: 10 },
+    ],
+  },
+  {
+    type: BuildingType.STABLE,
+    label: 'Stable',
+    icon: '🐴',
+    cost: [
+      { itemId: 'planks_oak', count: 50 },
+      { itemId: 'iron_ingot', count: 8 },
+    ],
+  },
+  {
+    type: BuildingType.SIEGE_WORKSHOP,
+    label: 'Siege Workshop',
+    icon: '💣',
+    cost: [
+      { itemId: 'iron_ingot', count: 20 },
+      { itemId: 'planks_dark', count: 30 },
+    ],
+  },
 ];
 
 export class CastleBuildUI {
@@ -46,7 +92,13 @@ export class CastleBuildUI {
   private ghostMesh: THREE.Mesh | null = null;
   private placementPos: { x: number; y: number; z: number } | null = null;
 
-  constructor(castle: Castle, inventory: Inventory, chunkManager: ChunkManager, hud: HUD, scene: THREE.Scene) {
+  constructor(
+    castle: Castle,
+    inventory: Inventory,
+    chunkManager: ChunkManager,
+    hud: HUD,
+    scene: THREE.Scene,
+  ) {
     this.castle = castle;
     this.inventory = inventory;
     this.chunkManager = chunkManager;
@@ -55,7 +107,8 @@ export class CastleBuildUI {
 
     this.overlay = document.createElement('div');
     this.overlay.id = 'castle-build-ui';
-    this.overlay.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:150;pointer-events:auto;';
+    this.overlay.style.cssText =
+      'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);display:none;gap:8px;z-index:150;pointer-events:auto;';
 
     this.createButtons();
     document.body.appendChild(this.overlay);
@@ -64,7 +117,8 @@ export class CastleBuildUI {
   private createButtons(): void {
     for (const opt of BUILDING_OPTIONS) {
       const btn = document.createElement('button');
-      btn.style.cssText = 'background:rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:12px;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:100px;';
+      btn.style.cssText =
+        'background:rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:12px;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:100px;';
 
       const canAfford = this.checkCost(opt.cost);
       if (!canAfford) btn.style.opacity = '0.4';
@@ -84,8 +138,12 @@ export class CastleBuildUI {
       btn.innerHTML = html;
 
       btn.addEventListener('click', () => this.selectBuilding(opt));
-      btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#f1c40f'; });
-      btn.addEventListener('mouseleave', () => { btn.style.borderColor = this.selectedBuilding === opt ? '#2ecc71' : 'rgba(255,255,255,0.3)'; });
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = '#f1c40f';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = this.selectedBuilding === opt ? '#2ecc71' : 'rgba(255,255,255,0.3)';
+      });
       btn.dataset.buildingType = opt.type;
       this.overlay.appendChild(btn);
     }
@@ -101,14 +159,20 @@ export class CastleBuildUI {
 
     // Update button styling
     this.overlay.querySelectorAll('button').forEach((btn) => {
-      (btn as HTMLElement).style.borderColor = btn.dataset.buildingType === opt.type ? '#2ecc71' : 'rgba(255,255,255,0.3)';
+      (btn as HTMLElement).style.borderColor =
+        btn.dataset.buildingType === opt.type ? '#2ecc71' : 'rgba(255,255,255,0.3)';
     });
 
     // Create ghost preview mesh
     this.removeGhost();
     const size = opt.type === BuildingType.WATCHTOWER ? 3 : 5;
     const geo = new THREE.BoxGeometry(size, 4, size);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.3, wireframe: true });
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x2ecc71,
+      transparent: true,
+      opacity: 0.3,
+      wireframe: true,
+    });
     this.ghostMesh = new THREE.Mesh(geo, mat);
     this.scene.add(this.ghostMesh);
   }
@@ -203,8 +267,10 @@ export class CastleBuildUI {
           for (let dy = 0; dy < 4; dy++) {
             const isWall = Math.abs(dx) === size || Math.abs(dz) === size;
             this.chunkManager.setBlockAtWorld(
-              x + dx, y + 1 + dy, z + dz,
-              isWall ? BlockType.CASTLE_WALL : (dy === 0 ? BlockType.CASTLE_FLOOR : BlockType.AIR),
+              x + dx,
+              y + 1 + dy,
+              z + dz,
+              isWall ? BlockType.CASTLE_WALL : dy === 0 ? BlockType.CASTLE_FLOOR : BlockType.AIR,
             );
           }
           this.chunkManager.setBlockAtWorld(x + dx, y + 5, z + dz, BlockType.PLANKS_DARK);
@@ -262,7 +328,14 @@ export class CastleBuildUI {
     this.overlay.style.display = 'none';
   }
 
-  get isVisible(): boolean { return this.visible; }
-  get isPlacing(): boolean { return this.selectedBuilding !== null; }
-  destroy(): void { this.removeGhost(); this.overlay.remove(); }
+  get isVisible(): boolean {
+    return this.visible;
+  }
+  get isPlacing(): boolean {
+    return this.selectedBuilding !== null;
+  }
+  destroy(): void {
+    this.removeGhost();
+    this.overlay.remove();
+  }
 }

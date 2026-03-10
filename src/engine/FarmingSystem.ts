@@ -10,10 +10,12 @@ import type { ChunkManager } from '../world/ChunkManager';
 import { BlockType } from '../world/BlockType';
 
 export interface CropPlot {
-  x: number; y: number; z: number;
+  x: number;
+  y: number;
+  z: number;
   cropType: CropType;
-  growthStage: number;     // 0-3
-  growthTimer: number;     // seconds until next stage
+  growthStage: number; // 0-3
+  growthTimer: number; // seconds until next stage
   watered: boolean;
 }
 
@@ -24,11 +26,18 @@ export enum CropType {
   PUMPKIN = 'pumpkin',
 }
 
-const CROP_DATA: Record<CropType, { growTime: number; yield: { itemId: string; count: number }; seedItem: string }> = {
-  [CropType.WHEAT]:   { growTime: 60,  yield: { itemId: 'wheat',  count: 3 }, seedItem: 'wheat_seeds' },
-  [CropType.CARROT]:  { growTime: 80,  yield: { itemId: 'carrot', count: 2 }, seedItem: 'carrot' },
-  [CropType.POTATO]:  { growTime: 80,  yield: { itemId: 'potato', count: 2 }, seedItem: 'potato' },
-  [CropType.PUMPKIN]: { growTime: 120, yield: { itemId: 'pumpkin', count: 1 }, seedItem: 'pumpkin_seeds' },
+const CROP_DATA: Record<
+  CropType,
+  { growTime: number; yield: { itemId: string; count: number }; seedItem: string }
+> = {
+  [CropType.WHEAT]: { growTime: 60, yield: { itemId: 'wheat', count: 3 }, seedItem: 'wheat_seeds' },
+  [CropType.CARROT]: { growTime: 80, yield: { itemId: 'carrot', count: 2 }, seedItem: 'carrot' },
+  [CropType.POTATO]: { growTime: 80, yield: { itemId: 'potato', count: 2 }, seedItem: 'potato' },
+  [CropType.PUMPKIN]: {
+    growTime: 120,
+    yield: { itemId: 'pumpkin', count: 1 },
+    seedItem: 'pumpkin_seeds',
+  },
 };
 
 export class FarmingSystem {
@@ -49,17 +58,20 @@ export class FarmingSystem {
     // Check if this spot is farmable (dirt/grass below, air at position)
     const below = this.chunkManager.getBlockAtWorld(x, y - 1, z);
     const at = this.chunkManager.getBlockAtWorld(x, y, z);
-    if ((below !== BlockType.DIRT && below !== BlockType.GRASS) || at !== BlockType.AIR) return false;
+    if ((below !== BlockType.DIRT && below !== BlockType.GRASS) || at !== BlockType.AIR)
+      return false;
 
     // Check no existing crop here
-    if (this.crops.some(c => c.x === x && c.y === y && c.z === z)) return false;
+    if (this.crops.some((c) => c.x === x && c.y === y && c.z === z)) return false;
 
     const data = CROP_DATA[cropType];
     // Check for water nearby (speeds growth)
     const watered = this.hasWaterNear(x, y, z);
 
     this.crops.push({
-      x, y, z,
+      x,
+      y,
+      z,
       cropType,
       growthStage: 0,
       growthTimer: watered ? data.growTime * 0.6 : data.growTime,
@@ -73,7 +85,9 @@ export class FarmingSystem {
 
   /** Try to harvest a crop at the given position. */
   harvest(x: number, y: number, z: number): boolean {
-    const idx = this.crops.findIndex(c => c.x === x && c.y === y && c.z === z && c.growthStage >= 3);
+    const idx = this.crops.findIndex(
+      (c) => c.x === x && c.y === y && c.z === z && c.growthStage >= 3,
+    );
     if (idx < 0) return false;
 
     const crop = this.crops[idx];
@@ -106,17 +120,20 @@ export class FarmingSystem {
 
   /** Get crop at position (for HUD display). */
   getCropAt(x: number, y: number, z: number): CropPlot | null {
-    return this.crops.find(c => c.x === x && c.y === y && c.z === z) ?? null;
+    return this.crops.find((c) => c.x === x && c.y === y && c.z === z) ?? null;
   }
 
   private hasWaterNear(x: number, y: number, z: number): boolean {
     for (let dx = -3; dx <= 3; dx++) {
       for (let dz = -3; dz <= 3; dz++) {
-        if (this.chunkManager.getBlockAtWorld(x + dx, y - 1, z + dz) === BlockType.WATER) return true;
+        if (this.chunkManager.getBlockAtWorld(x + dx, y - 1, z + dz) === BlockType.WATER)
+          return true;
       }
     }
     return false;
   }
 
-  get cropCount(): number { return this.crops.length; }
+  get cropCount(): number {
+    return this.crops.length;
+  }
 }

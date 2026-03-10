@@ -16,9 +16,16 @@ export class ScoreDashboard {
   private inventory: Inventory;
   private _isVisible = false;
 
-  get isVisible(): boolean { return this._isVisible; }
+  get isVisible(): boolean {
+    return this._isVisible;
+  }
 
-  constructor(playerCastle: Castle, enemyCastle: Castle | null, ecsWorld: ECSWorld, inventory: Inventory) {
+  constructor(
+    playerCastle: Castle,
+    enemyCastle: Castle | null,
+    ecsWorld: ECSWorld,
+    inventory: Inventory,
+  ) {
     this.playerCastle = playerCastle;
     this.enemyCastle = enemyCastle;
     this.ecsWorld = ecsWorld;
@@ -48,8 +55,15 @@ export class ScoreDashboard {
     if (this._isVisible) this.render();
   }
 
-  show(): void { this._isVisible = true; this.container.style.display = 'block'; this.render(); }
-  hide(): void { this._isVisible = false; this.container.style.display = 'none'; }
+  show(): void {
+    this._isVisible = true;
+    this.container.style.display = 'block';
+    this.render();
+  }
+  hide(): void {
+    this._isVisible = false;
+    this.container.style.display = 'none';
+  }
 
   update(): void {
     if (this._isVisible) this.render();
@@ -57,19 +71,23 @@ export class ScoreDashboard {
 
   private render(): void {
     const warriors = this.ecsWorld.queryByTag('warrior');
-    const playerWarriors = warriors.filter(w => w.getComponent<TeamComponent>('team')?.team === 'player').length;
-    const enemyWarriors = warriors.filter(w => w.getComponent<TeamComponent>('team')?.team === 'enemy').length;
+    const playerWarriors = warriors.filter(
+      (w) => w.getComponent<TeamComponent>('team')?.team === 'player',
+    ).length;
+    const enemyWarriors = warriors.filter(
+      (w) => w.getComponent<TeamComponent>('team')?.team === 'enemy',
+    ).length;
 
     const pCastle = this.playerCastle;
     const eCastle = this.enemyCastle;
 
     const pHp = pCastle.totalHp;
     const pMaxHp = pCastle.maxHp;
-    const pBuildings = pCastle.buildings.filter(b => b.hp > 0).length;
+    const pBuildings = pCastle.buildings.filter((b) => b.hp > 0).length;
 
     const eHp = eCastle?.totalHp ?? 0;
     const eMaxHp = eCastle?.maxHp ?? 1;
-    const eBuildings = eCastle?.buildings.filter(b => b.hp > 0).length ?? 0;
+    const eBuildings = eCastle?.buildings.filter((b) => b.hp > 0).length ?? 0;
 
     const totalItems = this.inventory.getHotbar().reduce((sum, s) => sum + (s?.count ?? 0), 0);
 

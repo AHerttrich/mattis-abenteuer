@@ -32,19 +32,40 @@ export class InputManager {
     });
   }
 
-  isKeyDown(key: string): boolean { return this.keys.has(key.toLowerCase()); }
-  isMouseDown(button: number): boolean { return this.mouseButtons.has(button); }
-  get mouseDX(): number { return this._mouseDX; }
-  get mouseDY(): number { return this._mouseDY; }
-  get isPointerLocked(): boolean { return this._isPointerLocked; }
+  isKeyDown(key: string): boolean {
+    return this.keys.has(key.toLowerCase());
+  }
+  isMouseDown(button: number): boolean {
+    return this.mouseButtons.has(button);
+  }
+  get mouseDX(): number {
+    return this._mouseDX;
+  }
+  get mouseDY(): number {
+    return this._mouseDY;
+  }
+  get isPointerLocked(): boolean {
+    return this._isPointerLocked;
+  }
 
   /** Call at end of frame to reset deltas */
-  resetDeltas(): void { this._mouseDX = 0; this._mouseDY = 0; }
+  resetDeltas(): void {
+    this._mouseDX = 0;
+    this._mouseDY = 0;
+  }
 
-  private onKeyDown(e: KeyboardEvent): void { this.keys.add(e.key.toLowerCase()); }
-  private onKeyUp(e: KeyboardEvent): void { this.keys.delete(e.key.toLowerCase()); }
-  private onMouseDown(e: MouseEvent): void { this.mouseButtons.add(e.button); }
-  private onMouseUp(e: MouseEvent): void { this.mouseButtons.delete(e.button); }
+  private onKeyDown(e: KeyboardEvent): void {
+    this.keys.add(e.key.toLowerCase());
+  }
+  private onKeyUp(e: KeyboardEvent): void {
+    this.keys.delete(e.key.toLowerCase());
+  }
+  private onMouseDown(e: MouseEvent): void {
+    this.mouseButtons.add(e.button);
+  }
+  private onMouseUp(e: MouseEvent): void {
+    this.mouseButtons.delete(e.button);
+  }
   private onMouseMove(e: MouseEvent): void {
     if (!this._isPointerLocked) return;
     this._mouseDX += e.movementX;

@@ -8,7 +8,11 @@
 import * as THREE from 'three';
 import type { WorldGenerator } from '../world/WorldGenerator';
 
-export enum WeatherType { CLEAR, RAIN, SNOW }
+export enum WeatherType {
+  CLEAR,
+  RAIN,
+  SNOW,
+}
 
 export class WeatherSystem {
   private scene: THREE.Scene;

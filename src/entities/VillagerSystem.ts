@@ -18,10 +18,10 @@ export enum VillagerProfession {
 }
 
 export interface TradeOffer {
-  give: { itemId: string; count: number }[];   // what player pays
-  receive: { itemId: string; count: number };   // what player gets
-  stock: number;    // how many times this trade can be done (refreshes)
-  used: number;     // how many times it's been used
+  give: { itemId: string; count: number }[]; // what player pays
+  receive: { itemId: string; count: number }; // what player gets
+  stock: number; // how many times this trade can be done (refreshes)
+  used: number; // how many times it's been used
 }
 
 export interface Villager {
@@ -29,8 +29,11 @@ export interface Villager {
   name: string;
   profession: VillagerProfession;
   trades: TradeOffer[];
-  x: number; y: number; z: number;
-  homeX: number; homeZ: number;
+  x: number;
+  y: number;
+  z: number;
+  homeX: number;
+  homeZ: number;
   mesh: THREE.Group;
   wanderAngle: number;
   wanderTimer: number;
@@ -38,8 +41,22 @@ export interface Villager {
 
 // ── Names ───────────────────────────────────────────────────
 const NAMES = [
-  'Erik', 'Helga', 'Bjorn', 'Astrid', 'Gunnar', 'Freya', 'Ragnar', 'Sigrid',
-  'Leif', 'Ingrid', 'Sven', 'Thora', 'Olaf', 'Hilda', 'Magnus', 'Liv',
+  'Erik',
+  'Helga',
+  'Bjorn',
+  'Astrid',
+  'Gunnar',
+  'Freya',
+  'Ragnar',
+  'Sigrid',
+  'Leif',
+  'Ingrid',
+  'Sven',
+  'Thora',
+  'Olaf',
+  'Hilda',
+  'Magnus',
+  'Liv',
 ];
 
 // ── Trade tables per profession ─────────────────────────────
@@ -47,30 +64,114 @@ function generateTrades(prof: VillagerProfession): TradeOffer[] {
   switch (prof) {
     case VillagerProfession.BLACKSMITH:
       return [
-        { give: [{ itemId: 'iron_ingot', count: 4 }], receive: { itemId: 'iron_sword', count: 1 }, stock: 3, used: 0 },
-        { give: [{ itemId: 'iron_ingot', count: 6 }], receive: { itemId: 'iron_pickaxe', count: 1 }, stock: 2, used: 0 },
-        { give: [{ itemId: 'gold_ingot', count: 8 }], receive: { itemId: 'gold_sword', count: 1 }, stock: 1, used: 0 },
-        { give: [{ itemId: 'iron_ingot', count: 3 }, { itemId: 'coal', count: 5 }], receive: { itemId: 'iron_helmet', count: 1 }, stock: 2, used: 0 },
+        {
+          give: [{ itemId: 'iron_ingot', count: 4 }],
+          receive: { itemId: 'iron_sword', count: 1 },
+          stock: 3,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'iron_ingot', count: 6 }],
+          receive: { itemId: 'iron_pickaxe', count: 1 },
+          stock: 2,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'gold_ingot', count: 8 }],
+          receive: { itemId: 'gold_sword', count: 1 },
+          stock: 1,
+          used: 0,
+        },
+        {
+          give: [
+            { itemId: 'iron_ingot', count: 3 },
+            { itemId: 'coal', count: 5 },
+          ],
+          receive: { itemId: 'iron_helmet', count: 1 },
+          stock: 2,
+          used: 0,
+        },
       ];
     case VillagerProfession.FARMER:
       return [
-        { give: [{ itemId: 'gold_ingot', count: 1 }], receive: { itemId: 'bread', count: 8 }, stock: 5, used: 0 },
-        { give: [{ itemId: 'gold_ingot', count: 1 }], receive: { itemId: 'apple', count: 6 }, stock: 5, used: 0 },
-        { give: [{ itemId: 'gold_ingot', count: 3 }], receive: { itemId: 'cooked_meat', count: 10 }, stock: 3, used: 0 },
-        { give: [{ itemId: 'diamond', count: 1 }], receive: { itemId: 'golden_apple', count: 2 }, stock: 1, used: 0 },
+        {
+          give: [{ itemId: 'gold_ingot', count: 1 }],
+          receive: { itemId: 'bread', count: 8 },
+          stock: 5,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'gold_ingot', count: 1 }],
+          receive: { itemId: 'apple', count: 6 },
+          stock: 5,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'gold_ingot', count: 3 }],
+          receive: { itemId: 'cooked_meat', count: 10 },
+          stock: 3,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'diamond', count: 1 }],
+          receive: { itemId: 'golden_apple', count: 2 },
+          stock: 1,
+          used: 0,
+        },
       ];
     case VillagerProfession.MERCHANT:
       return [
-        { give: [{ itemId: 'gold_ingot', count: 5 }], receive: { itemId: 'diamond', count: 1 }, stock: 2, used: 0 },
-        { give: [{ itemId: 'iron_ingot', count: 10 }], receive: { itemId: 'gold_ingot', count: 3 }, stock: 4, used: 0 },
-        { give: [{ itemId: 'cobblestone', count: 32 }], receive: { itemId: 'iron_ingot', count: 2 }, stock: 5, used: 0 },
-        { give: [{ itemId: 'crystal', count: 2 }], receive: { itemId: 'crystal_pickaxe', count: 1 }, stock: 1, used: 0 },
+        {
+          give: [{ itemId: 'gold_ingot', count: 5 }],
+          receive: { itemId: 'diamond', count: 1 },
+          stock: 2,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'iron_ingot', count: 10 }],
+          receive: { itemId: 'gold_ingot', count: 3 },
+          stock: 4,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'cobblestone', count: 32 }],
+          receive: { itemId: 'iron_ingot', count: 2 },
+          stock: 5,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'crystal', count: 2 }],
+          receive: { itemId: 'crystal_pickaxe', count: 1 },
+          stock: 1,
+          used: 0,
+        },
       ];
     case VillagerProfession.RECRUITER:
       return [
-        { give: [{ itemId: 'gold_ingot', count: 3 }, { itemId: 'iron_sword', count: 1 }], receive: { itemId: '_recruit_swordsman', count: 1 }, stock: 3, used: 0 },
-        { give: [{ itemId: 'gold_ingot', count: 5 }, { itemId: 'bow', count: 1 }], receive: { itemId: '_recruit_archer', count: 1 }, stock: 2, used: 0 },
-        { give: [{ itemId: 'gold_ingot', count: 8 }], receive: { itemId: '_recruit_shield', count: 1 }, stock: 1, used: 0 },
+        {
+          give: [
+            { itemId: 'gold_ingot', count: 3 },
+            { itemId: 'iron_sword', count: 1 },
+          ],
+          receive: { itemId: '_recruit_swordsman', count: 1 },
+          stock: 3,
+          used: 0,
+        },
+        {
+          give: [
+            { itemId: 'gold_ingot', count: 5 },
+            { itemId: 'bow', count: 1 },
+          ],
+          receive: { itemId: '_recruit_archer', count: 1 },
+          stock: 2,
+          used: 0,
+        },
+        {
+          give: [{ itemId: 'gold_ingot', count: 8 }],
+          receive: { itemId: '_recruit_shield', count: 1 },
+          stock: 1,
+          used: 0,
+        },
       ];
   }
 }
@@ -130,7 +231,14 @@ export class VillagerSystem {
     }
   }
 
-  private spawnVillager(prof: VillagerProfession, x: number, y: number, z: number, homeX: number, homeZ: number): void {
+  private spawnVillager(
+    prof: VillagerProfession,
+    x: number,
+    y: number,
+    z: number,
+    homeX: number,
+    homeZ: number,
+  ): void {
     const id = `villager_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const name = NAMES[Math.floor(Math.random() * NAMES.length)];
     const trades = generateTrades(prof);
@@ -142,7 +250,7 @@ export class VillagerSystem {
     // Body
     const body = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.9, 0.35),
-      new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.7 })
+      new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.7 }),
     );
     body.position.y = 0.65;
     body.castShadow = true;
@@ -151,7 +259,7 @@ export class VillagerSystem {
     // Head (skin colored)
     const head = new THREE.Mesh(
       new THREE.BoxGeometry(0.35, 0.35, 0.35),
-      new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.6 })
+      new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.6 }),
     );
     head.position.y = 1.28;
     head.castShadow = true;
@@ -161,7 +269,7 @@ export class VillagerSystem {
     for (const side of [-1, 1]) {
       const leg = new THREE.Mesh(
         new THREE.BoxGeometry(0.15, 0.4, 0.2),
-        new THREE.MeshStandardMaterial({ color: 0x554433 })
+        new THREE.MeshStandardMaterial({ color: 0x554433 }),
       );
       leg.position.set(side * 0.12, 0.2, 0);
       group.add(leg);
@@ -183,7 +291,11 @@ export class VillagerSystem {
     ctx.fillText(prof, 128, 40);
 
     const labelTex = new THREE.CanvasTexture(labelCanvas);
-    const labelMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true, depthTest: false });
+    const labelMat = new THREE.SpriteMaterial({
+      map: labelTex,
+      transparent: true,
+      depthTest: false,
+    });
     const label = new THREE.Sprite(labelMat);
     label.scale.set(2.0, 0.4, 1);
     label.position.y = 1.8;
@@ -193,8 +305,15 @@ export class VillagerSystem {
     this.scene.add(group);
 
     this.villagers.push({
-      id, name, profession: prof, trades,
-      x, y, z, homeX, homeZ,
+      id,
+      name,
+      profession: prof,
+      trades,
+      x,
+      y,
+      z,
+      homeX,
+      homeZ,
       mesh: group,
       wanderAngle: Math.random() * Math.PI * 2,
       wanderTimer: Math.random() * 5,
@@ -267,10 +386,15 @@ export class VillagerSystem {
     let nearestDist = this.interactionRange;
     for (const v of this.villagers) {
       const d = Math.sqrt((v.x - px) ** 2 + (v.y - py) ** 2 + (v.z - pz) ** 2);
-      if (d < nearestDist) { nearestDist = d; nearest = v; }
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearest = v;
+      }
     }
     return nearest;
   }
 
-  get villagerCount(): number { return this.villagers.length; }
+  get villagerCount(): number {
+    return this.villagers.length;
+  }
 }

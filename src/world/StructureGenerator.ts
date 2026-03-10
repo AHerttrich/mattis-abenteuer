@@ -33,7 +33,8 @@ export class StructureGenerator {
         const n = this.noise.noise2D(x * 0.01, z * 0.01);
 
         // Check if already known
-        if (this.structures.some((s) => Math.abs(s.x - x) < step && Math.abs(s.z - z) < step)) continue;
+        if (this.structures.some((s) => Math.abs(s.x - x) < step && Math.abs(s.z - z) < step))
+          continue;
 
         if (n > 0.85) {
           const type = this.selectType(x, z);
@@ -61,10 +62,18 @@ export class StructureGenerator {
     loc.placed = true;
 
     switch (loc.type) {
-      case 'dungeon': this.placeDungeon(loc, chunkManager); break;
-      case 'ruin': this.placeRuin(loc, chunkManager); break;
-      case 'village': this.placeVillage(loc, chunkManager); break;
-      case 'treasure': this.placeTreasure(loc, chunkManager); break;
+      case 'dungeon':
+        this.placeDungeon(loc, chunkManager);
+        break;
+      case 'ruin':
+        this.placeRuin(loc, chunkManager);
+        break;
+      case 'village':
+        this.placeVillage(loc, chunkManager);
+        break;
+      case 'treasure':
+        this.placeTreasure(loc, chunkManager);
+        break;
     }
   }
 
@@ -94,7 +103,12 @@ export class StructureGenerator {
       for (let dz = -3; dz <= 3; dz++) {
         for (let dy = 0; dy <= 4; dy++) {
           const isWall = Math.abs(dx) === 3 || Math.abs(dz) === 3 || dy === 0 || dy === 4;
-          cm.setBlockAtWorld(x + dx, roomY + dy, z + 10 + dz, isWall ? BlockType.STONE_BRICK : BlockType.AIR);
+          cm.setBlockAtWorld(
+            x + dx,
+            roomY + dy,
+            z + 10 + dz,
+            isWall ? BlockType.STONE_BRICK : BlockType.AIR,
+          );
         }
       }
     }
@@ -141,7 +155,12 @@ export class StructureGenerator {
           cm.setBlockAtWorld(hx + dx, y, hz + dz, BlockType.STONE_BRICK);
           const isWall = Math.abs(dx) === 2 || Math.abs(dz) === 2;
           for (let dy = 1; dy <= 3; dy++) {
-            cm.setBlockAtWorld(hx + dx, y + dy, hz + dz, isWall ? BlockType.PLANKS_OAK : BlockType.AIR);
+            cm.setBlockAtWorld(
+              hx + dx,
+              y + dy,
+              hz + dz,
+              isWall ? BlockType.PLANKS_OAK : BlockType.AIR,
+            );
           }
           // Roof
           cm.setBlockAtWorld(hx + dx, y + 4, hz + dz, BlockType.PLANKS_OAK);
@@ -180,5 +199,7 @@ export class StructureGenerator {
     cm.setBlockAtWorld(x, y + 2, z, BlockType.TORCH);
   }
 
-  get allStructures(): StructureLocation[] { return this.structures; }
+  get allStructures(): StructureLocation[] {
+    return this.structures;
+  }
 }

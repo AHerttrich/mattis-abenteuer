@@ -17,7 +17,9 @@ export class AmbientSoundSystem {
       this.ambientGain = this.ctx.createGain();
       this.ambientGain.gain.value = 0.03;
       this.ambientGain.connect(this.ctx.destination);
-    } catch { /* no audio */ }
+    } catch {
+      /* no audio */
+    }
   }
 
   /** Update ambient sounds based on biome and underground state. */
@@ -59,7 +61,8 @@ export class AmbientSoundSystem {
     g.gain.setValueAtTime(0.04, this.ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
     osc.connect(g).connect(this.ambientGain);
-    osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.2);
   }
 
   private playWindGust(): void {
@@ -71,13 +74,15 @@ export class AmbientSoundSystem {
     const src = this.ctx.createBufferSource();
     src.buffer = buffer;
     const lpf = this.ctx.createBiquadFilter();
-    lpf.type = 'lowpass'; lpf.frequency.value = 300;
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 300;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0, this.ctx.currentTime);
     g.gain.linearRampToValueAtTime(0.02, this.ctx.currentTime + 0.3);
     g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1);
     src.connect(lpf).connect(g).connect(this.ambientGain);
-    src.start(); src.stop(this.ctx.currentTime + 1);
+    src.start();
+    src.stop(this.ctx.currentTime + 1);
   }
 
   private playCaveDrip(): void {
@@ -90,7 +95,8 @@ export class AmbientSoundSystem {
     g.gain.setValueAtTime(0.06, this.ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
     osc.connect(g).connect(this.ambientGain);
-    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.12);
   }
 
   private playDesertWind(): void {
@@ -117,7 +123,8 @@ export class AmbientSoundSystem {
     }
     g.gain.setValueAtTime(0, this.ctx.currentTime + 0.4);
     osc.connect(g).connect(this.ambientGain);
-    osc.start(); osc.stop(this.ctx.currentTime + 0.4);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.4);
   }
 
   private playEcho(): void {
@@ -129,7 +136,8 @@ export class AmbientSoundSystem {
     g.gain.setValueAtTime(0.03, this.ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.5);
     osc.connect(g).connect(this.ambientGain);
-    osc.start(); osc.stop(this.ctx.currentTime + 1.5);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 1.5);
   }
 
   private playFilteredNoise(freq: number, vol: number, dur: number): void {
@@ -137,18 +145,22 @@ export class AmbientSoundSystem {
     const bufferSize = Math.floor(this.ctx.sampleRate * dur);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
     const src = this.ctx.createBufferSource();
     src.buffer = buffer;
     const lpf = this.ctx.createBiquadFilter();
-    lpf.type = 'lowpass'; lpf.frequency.value = freq;
+    lpf.type = 'lowpass';
+    lpf.frequency.value = freq;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0, this.ctx.currentTime);
     g.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + dur * 0.3);
     g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + dur);
     src.connect(lpf).connect(g).connect(this.ambientGain);
-    src.start(); src.stop(this.ctx.currentTime + dur);
+    src.start();
+    src.stop(this.ctx.currentTime + dur);
   }
 
-  toggle(): void { this.enabled = !this.enabled; }
+  toggle(): void {
+    this.enabled = !this.enabled;
+  }
 }

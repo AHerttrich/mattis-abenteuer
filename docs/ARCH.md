@@ -74,6 +74,12 @@ graph TB
         CUI[Crafting UI<br/>Recipe Browser]
     end
 
+    subgraph "Visual Systems"
+        PP[Post-Processing<br/>Bloom, ACES, Fog]
+        WTH[Weather System<br/>Rain, Snow per Biome]
+        TA[Texture Atlas<br/>Animated Lava, UV Map]
+    end
+
     GL --> R
     GL --> P
     GL --> I
@@ -99,6 +105,9 @@ graph TB
     VS --> INV
     FARM --> INV
     MT --> I
+    R --> PP
+    PP --> WTH
+    TA --> CM
 ```
 
 ## Technology Choices

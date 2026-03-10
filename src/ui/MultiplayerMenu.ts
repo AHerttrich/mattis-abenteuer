@@ -10,7 +10,9 @@ export class MultiplayerMenu {
   private _isVisible = false;
   private onConnectedCallback: (() => void) | null = null;
 
-  get isVisible(): boolean { return this._isVisible; }
+  get isVisible(): boolean {
+    return this._isVisible;
+  }
 
   constructor(networkManager: NetworkManager) {
     this.networkManager = networkManager;
@@ -31,7 +33,9 @@ export class MultiplayerMenu {
     this.container.querySelector('#mp-host-btn')!.addEventListener('click', () => this.doHost());
     this.container.querySelector('#mp-join-btn')!.addEventListener('click', () => this.doJoin());
     this.container.querySelector('#mp-close-btn')!.addEventListener('click', () => this.hide());
-    this.container.querySelector('#mp-disconnect-btn')!.addEventListener('click', () => this.doDisconnect());
+    this.container
+      .querySelector('#mp-disconnect-btn')!
+      .addEventListener('click', () => this.doDisconnect());
 
     // Status updates
     this.networkManager.onStatus((status, info) => {
@@ -39,7 +43,8 @@ export class MultiplayerMenu {
       if (status === 'connected') {
         statusEl.textContent = '🟢 Connected!';
         statusEl.style.color = '#2ecc71';
-        (this.container.querySelector('#mp-disconnect-btn') as HTMLElement).style.display = 'inline-block';
+        (this.container.querySelector('#mp-disconnect-btn') as HTMLElement).style.display =
+          'inline-block';
         if (this.onConnectedCallback) this.onConnectedCallback();
         setTimeout(() => this.hide(), 1500);
       } else if (status === 'disconnected') {

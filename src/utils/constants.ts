@@ -21,12 +21,12 @@ export const PLAYER_EYE_HEIGHT = 1.6;
 export const TERMINAL_VELOCITY = -50.0;
 
 // ── Movement Feel ───────────────────────────────────────────
-export const HEAD_BOB_SPEED = 10.0;      // oscillations per second while walking
-export const HEAD_BOB_AMOUNT = 0.06;     // vertical displacement in world units
-export const HEAD_BOB_SWAY = 0.03;       // horizontal sway amount
-export const SPRINT_FOV_BOOST = 5;       // extra FOV degrees while sprinting
-export const ACCELERATION_TIME = 0.12;   // seconds to reach full speed
-export const LANDING_DIP_AMOUNT = 0.15;  // camera dip in world units after landing
+export const HEAD_BOB_SPEED = 10.0; // oscillations per second while walking
+export const HEAD_BOB_AMOUNT = 0.06; // vertical displacement in world units
+export const HEAD_BOB_SWAY = 0.03; // horizontal sway amount
+export const SPRINT_FOV_BOOST = 5; // extra FOV degrees while sprinting
+export const ACCELERATION_TIME = 0.12; // seconds to reach full speed
+export const LANDING_DIP_AMOUNT = 0.15; // camera dip in world units after landing
 export const LANDING_DIP_RECOVERY = 8.0; // recovery speed (units/sec)
 
 // ── Combat ───────────────────────────────────────────────────
@@ -37,9 +37,9 @@ export const MELEE_RANGE = 2.5;
 export const CATAPULT_RANGE = 30.0;
 export const ATTACK_COOLDOWN = 0.5;
 export const CATAPULT_COOLDOWN = 5.0;
-export const KNOCKBACK_FORCE = 0.6;        // blocks pushed on hit
-export const CRIT_CHANCE = 0.15;           // 15% chance
-export const CRIT_MULTIPLIER = 2.0;        // 2× damage on crit
+export const KNOCKBACK_FORCE = 0.6; // blocks pushed on hit
+export const CRIT_CHANCE = 0.15; // 15% chance
+export const CRIT_MULTIPLIER = 2.0; // 2× damage on crit
 
 // ── Crafting ─────────────────────────────────────────────────
 export const INVENTORY_SIZE = 36;

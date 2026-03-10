@@ -4,7 +4,9 @@ import { SaveSystem } from '../engine/SaveSystem';
 
 describe('WorldGenerator Biomes', () => {
   let gen: WorldGenerator;
-  beforeEach(() => { gen = new WorldGenerator(42); });
+  beforeEach(() => {
+    gen = new WorldGenerator(42);
+  });
 
   it('should return a valid biome enum', () => {
     const biome = gen.getBiome(0, 0);

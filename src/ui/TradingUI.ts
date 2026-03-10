@@ -20,7 +20,9 @@ export class TradingUI {
   // Callback for recruitment trades
   private recruitCallback: ((type: string) => void) | null = null;
 
-  get isVisible(): boolean { return this._isVisible; }
+  get isVisible(): boolean {
+    return this._isVisible;
+  }
 
   constructor(inventory: Inventory) {
     this.inventory = inventory;
@@ -71,7 +73,12 @@ export class TradingUI {
     // Header
     const header = document.createElement('div');
     header.style.cssText = 'text-align:center;margin-bottom:20px;';
-    const profIcons: Record<string, string> = { blacksmith: '⚒️', farmer: '🌾', merchant: '💰', recruiter: '⚔️' };
+    const profIcons: Record<string, string> = {
+      blacksmith: '⚒️',
+      farmer: '🌾',
+      merchant: '💰',
+      recruiter: '⚔️',
+    };
     header.innerHTML = `
       <div style="font-size:28px;margin-bottom:4px;">${profIcons[v.profession] || '👤'}</div>
       <div style="font-size:20px;font-weight:bold;color:#f1c40f;">${v.name}</div>
@@ -113,7 +120,8 @@ export class TradingUI {
 
     // Cost row
     const costRow = document.createElement('div');
-    costRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;';
+    costRow.style.cssText =
+      'display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;';
 
     for (let i = 0; i < trade.give.length; i++) {
       if (i > 0) {
@@ -168,15 +176,21 @@ export class TradingUI {
         this.executeTrade(trade);
         this.render();
       });
-      card.addEventListener('mouseenter', () => { card.style.background = 'rgba(46,204,113,0.15)'; card.style.borderColor = '#27ae60'; });
-      card.addEventListener('mouseleave', () => { card.style.background = 'rgba(255,255,255,0.08)'; card.style.borderColor = '#2ecc71'; });
+      card.addEventListener('mouseenter', () => {
+        card.style.background = 'rgba(46,204,113,0.15)';
+        card.style.borderColor = '#27ae60';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.background = 'rgba(255,255,255,0.08)';
+        card.style.borderColor = '#2ecc71';
+      });
     }
 
     return card;
   }
 
   private canAffordTrade(trade: TradeOffer): boolean {
-    return trade.give.every(g => this.inventory.countItem(g.itemId) >= g.count);
+    return trade.give.every((g) => this.inventory.countItem(g.itemId) >= g.count);
   }
 
   private executeTrade(trade: TradeOffer): void {
@@ -199,5 +213,7 @@ export class TradingUI {
     trade.used++;
   }
 
-  destroy(): void { this.overlay.remove(); }
+  destroy(): void {
+    this.overlay.remove();
+  }
 }

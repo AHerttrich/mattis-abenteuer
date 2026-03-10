@@ -6,7 +6,9 @@ import { getItemDef } from '../crafting/Item';
 describe('Crafting', () => {
   describe('Inventory', () => {
     let inv: Inventory;
-    beforeEach(() => { inv = new Inventory(9); });
+    beforeEach(() => {
+      inv = new Inventory(9);
+    });
 
     it('should add items', () => {
       inv.addItem('dirt', 10);

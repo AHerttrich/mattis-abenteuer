@@ -5,8 +5,12 @@
 import { PATHFINDING_MAX_NODES } from '../utils/constants';
 
 interface PathNode {
-  x: number; y: number; z: number;
-  g: number; h: number; f: number;
+  x: number;
+  y: number;
+  z: number;
+  g: number;
+  h: number;
+  f: number;
   parent: PathNode | null;
 }
 
@@ -21,17 +25,33 @@ export class PathFinder {
 
   /** Find path from start to goal. Returns list of positions or null. */
   findPath(
-    sx: number, sy: number, sz: number,
-    gx: number, gy: number, gz: number,
+    sx: number,
+    sy: number,
+    sz: number,
+    gx: number,
+    gy: number,
+    gz: number,
   ): { x: number; y: number; z: number }[] | null {
-    sx = Math.floor(sx); sy = Math.floor(sy); sz = Math.floor(sz);
-    gx = Math.floor(gx); gy = Math.floor(gy); gz = Math.floor(gz);
+    sx = Math.floor(sx);
+    sy = Math.floor(sy);
+    sz = Math.floor(sz);
+    gx = Math.floor(gx);
+    gy = Math.floor(gy);
+    gz = Math.floor(gz);
 
     const open: PathNode[] = [];
     const closed = new Set<string>();
     const key = (x: number, y: number, z: number): string => `${x},${y},${z}`;
 
-    const start: PathNode = { x: sx, y: sy, z: sz, g: 0, h: this.heuristic(sx, sy, sz, gx, gy, gz), f: 0, parent: null };
+    const start: PathNode = {
+      x: sx,
+      y: sy,
+      z: sz,
+      g: 0,
+      h: this.heuristic(sx, sy, sz, gx, gy, gz),
+      f: 0,
+      parent: null,
+    };
     start.f = start.g + start.h;
     open.push(start);
 
@@ -72,12 +92,22 @@ export class PathFinder {
     return null; // No path found
   }
 
-  private getNeighbors(x: number, y: number, z: number): { x: number; y: number; z: number; cost: number }[] {
+  private getNeighbors(
+    x: number,
+    y: number,
+    z: number,
+  ): { x: number; y: number; z: number; cost: number }[] {
     const result: { x: number; y: number; z: number; cost: number }[] = [];
-    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const dirs = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ];
 
     for (const [dx, dz] of dirs) {
-      const nx = x + dx, nz = z + dz;
+      const nx = x + dx,
+        nz = z + dz;
 
       // Walk on same level — feet clear, head clear, ground exists
       if (!this.isSolid(nx, y, nz) && !this.isSolid(nx, y + 1, nz) && this.isSolid(nx, y - 1, nz)) {
@@ -85,8 +115,13 @@ export class PathFinder {
         continue;
       }
       // Step up (1 block) — need clearance above for 2-tall entity
-      if (this.isSolid(nx, y, nz) && !this.isSolid(nx, y + 1, nz) && !this.isSolid(nx, y + 2, nz)
-          && !this.isSolid(x, y + 2, z)) { // also check headroom at current pos
+      if (
+        this.isSolid(nx, y, nz) &&
+        !this.isSolid(nx, y + 1, nz) &&
+        !this.isSolid(nx, y + 2, nz) &&
+        !this.isSolid(x, y + 2, z)
+      ) {
+        // also check headroom at current pos
         result.push({ x: nx, y: y + 1, z: nz, cost: 2 });
         continue;
       }
@@ -96,14 +131,26 @@ export class PathFinder {
         continue;
       }
       // Step down (2 blocks) — for descending slopes
-      if (!this.isSolid(nx, y, nz) && !this.isSolid(nx, y - 1, nz) && !this.isSolid(nx, y - 2, nz) && this.isSolid(nx, y - 3, nz)) {
+      if (
+        !this.isSolid(nx, y, nz) &&
+        !this.isSolid(nx, y - 1, nz) &&
+        !this.isSolid(nx, y - 2, nz) &&
+        this.isSolid(nx, y - 3, nz)
+      ) {
         result.push({ x: nx, y: y - 2, z: nz, cost: 2.5 });
       }
     }
     return result;
   }
 
-  private heuristic(ax: number, ay: number, az: number, bx: number, by: number, bz: number): number {
+  private heuristic(
+    ax: number,
+    ay: number,
+    az: number,
+    bx: number,
+    by: number,
+    bz: number,
+  ): number {
     return Math.abs(ax - bx) + Math.abs(ay - by) + Math.abs(az - bz);
   }
 
